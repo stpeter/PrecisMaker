@@ -3,18 +3,24 @@
 PRECIS Maker
 by Peter Saint-Andre / stpeter@stpeter.im
 
-This is version 0.1, last updated 2013-05-08.
+This is version 0.1, last updated 2013-06-14.
 
 And yes, this is an experiment in literate programming. :-)
 
-" " "
+Table of Contents
 
-Introduction
+1.0 Introduction
+2.0 Method
+3.0 Constructing Our Data
+
+1.0 Introduction
 
 Internationalization is hard. Heck, even the word itself is hard, which 
 is why people shorten it to "i18n" (the letter "i", followed by 18 more
 letters, followed by the letter "n"). I even wrote a big presentation 
-about it once: "Internationalization, A Guide for the Perplexed".
+about it once: "Internationalization, A Guide for the Perplexed":
+
+https://stpeter.im/files/i18n-intro.pdf
 
 Anyway, folks at the Internet Engineering Task Force (IETF) have been
 working to make internationalization easier, building on the foundation
@@ -23,7 +29,7 @@ Internet protocols like email and the Domain Name System (DNS) to
 include characters outside the ASCII range. Personally, I care about
 this topic because the instant messaging technology I work on, called
 Jabber or XMPP, also supports fully internationalized identifiers for
-people, servers, and other components on the network.
+people, servers, and other entities on the network.
 
 The DNS work came in two phases (called IDNA2003 and IDNA2008).  One
 spinoff from IDNA2003 was a generalized framework for i18n called
@@ -59,7 +65,7 @@ invoke the Python interpreter in the following code.
 
 " " "
 
-Method
+2.0 Method
 
 The PRECIS framework specification defines our procedure:
 
@@ -73,18 +79,19 @@ particular string class.
 
 There are two string classes in PRECIS: the IdentifierClass and the
 FreeformClass. The IdentifierClass is a restricted class that allows
-only letters and digits (plus all of the characters from the ASCII
-range). The FreeformClass is more loose, since it disallows only control
+only letters and digits (although it also "grandfathers" all of the 
+characters from the ASCII range, even if they are symbols or whatnot). 
+The FreeformClass is more loose, since it disallows only control
 characters and some other so-called ignorable code points.
 
 Since there are only two string classes and the IdentifierClass is a
 strict subset of the FreeformClass, a codepoint is valid for all of
 PRECIS if it is valid for the IdentifierClass and a codepoint is
-disallowed if it is disallowed for the FreeformClass. Therefore, we
-really need to determine whether a codepoint is one of the following:
-protocol-valid (PVAL), disallowed, unassigned, contextual (which can be
-either CONTEXTJ or CONTEXTO), or protocol-valid for the FreeformClass
-(FREE_PVAL) and thus disallowed for the IdentifierClass.
+disallowed for all of PRECIS if it is disallowed for the FreeformClass. 
+Therefore, we really need to determine whether a codepoint is one of 
+the following: protocol-valid (PVAL), disallowed, unassigned, contextual 
+(which can be either CONTEXTJ or CONTEXTO), or protocol-valid for the 
+FreeformClass (FREE_PVAL) and thus disallowed for the IdentifierClass.
 
 In order to achieve those goals, we will need to read information from 
 various files in the Unicode Character Database ("ucd"), slice and dice
@@ -93,7 +100,7 @@ codepoint, and output an XML file that matches the format produced by
 the createtables script.
 
 Thankfully, the Python language contains core libraries that enable
-those functions. Therefore we import the relevant libraries.
+us to complete those tasks. Therefore we import the relevant libraries.
 
 " " "
 
@@ -105,3 +112,35 @@ import xml.dom.minidom
 ### CODE ###
 
 " " "
+
+3.0 Constructing Our Data
+
+As mentioned, all the data we need is contained in the Unicode Character
+Database or "ucd":
+
+http://www.unicode.org/ucd/
+
+To get the latest version, you can download all of the files here:
+
+http://www.unicode.org/Public/UCD/latest/ucd/
+
+PrecisMaker assumes that you will run the script in a directory that
+contains all of those text files. These are not included as part of 
+PrecisMaker since you should be able to run PrecisMaker against any
+(recent) version of the Unicode Character Database.
+
+The PRECIS spec requires us to use the following files:
+
+o DerivedCoreProperties.txt
+o HangulSyllableType.txt
+o Jamo.txt
+o SpecialCasing.txt
+o UnicodeData.txt
+
+Let's see exactly why we need those files, and what data we'll pull 
+from them...
+
+" " "
+
+# END 
+
