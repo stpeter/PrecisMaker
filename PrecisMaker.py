@@ -5,7 +5,7 @@
 PRECIS Maker
 by Peter Saint-Andre / stpeter@stpeter.im
 
-This is version 0.1, last updated 2013-06-17.
+This is version 0.1, last updated 2013-06-18.
 
 And yes, this is an experiment in literate programming. :-)
 
@@ -14,6 +14,10 @@ Table of Contents
 1.0 Introduction
 2.0 Method
 3.0 Constructing Our Data
+4.0 Running the Algorithm
+5.0 Acknowledgements
+
+###
 
 1.0 Introduction
 
@@ -58,6 +62,8 @@ Takahiro Nemoto to handle PRECIS.
 PRECIS Maker is written in the Python programming language. Therefore we
 invoke the Python interpreter in the following code.
 
+###
+
 2.0 Method
 
 The PRECIS framework specification defines our procedure:
@@ -97,14 +103,20 @@ us to complete those tasks. Therefore we import the relevant libraries.
 
 '''
 
+#
 ### BEGIN CODE ###
+#
 # Code to import the code libraries we need
 import os
 import sys
 import xml.dom.minidom
+#
 ### END CODE ###
+#
 
 '''
+
+###
 
 3.0 Constructing Our Data
 
@@ -232,9 +244,37 @@ pseudocode (where "cp" stands for codepoint):
 The following sections describe these categories in a bit more detail,
 from the perspective of preparing our data.
 
-'''
+First, we need to pull in the basic data from the UnicodeData.txt file.
+This data provides the basis for most of the decisions we'll make (e.g.,
+whether a codepoint is a letter, a digit, a space, a symbol, a control,
+a punctuation character).
+
+Each line in the UnicodeData.txt file contains a semicolon-separated
+set of data about a codepoint. The format is described here:
+
+http://www.unicode.org/reports/tr44/#UnicodeData.txt
 
 '''
+
+#
+### BEGIN CODE ###
+#
+# code to pull in the UnicodeData.txt file
+# each line in the file becomes an entry in the dictionary
+#
+udict = {};
+with open('UnicodeData.txt') as f:  
+    for line in f: 
+        data = line.split(';');
+        udict[data[0]] = data;
+#
+### END CODE ###
+#
+
+'''
+
+Next we'll delve further into data preparation for each of the rules we
+plan to apply.
 
 3.1 Exceptions
 
@@ -286,7 +326,9 @@ are:
 
 '''
 
+#
 ### BEGIN CODE ###
+#
 # create a Python dictionary of the code points in the Exceptions class
 # this dictionary follows the order in RFC 5892
 exceptions = dict([ 
@@ -331,7 +373,9 @@ exceptions = dict([
     ('3035','DISALLOWED'), 
     ('303B','DISALLOWED')
 ])
+#
 ### END CODE ###
+#
 
 '''
 
@@ -341,7 +385,7 @@ Currently, there are no characters in the BackwardCompatible category.
 Most people in the i18n community at the IETF seem to be hoping that
 this category is always empty. :-)
 
-If the category is ever non-empty, this PrecisMaker will be updated.
+If the category is ever non-empty, PrecisMaker will be updated.
 
 3.3 Unassigned
 
@@ -356,42 +400,143 @@ that is unassigned in the current version might be assigned in a future
 version. (Of course, that's true of all codepoints: their status is
 always subject to change as Unicode is updated over time.)
 
-
 3.4 ASCII7
 
+For our purposes, an ASCII7 character is a codepoint between U+0021 and
+U+007E. We don't need to read in any data from the Unicode Character
+Database to figure out that such a codepoint is PVALID.
 
 3.5 JoinControl
 
+According to RFC 5892, only two codepoints are in the JoinControl
+category:
+
+200C # ZERO WIDTH NON-JOINER
+200D # ZERO WIDTH JOINER
+
+I haven't been able to discover a rule-based way of determining whether
+a codepoint is a JoinControl (and thus CONTEXJ). For now I hardcode
+those two codepoints to CONTEXTJ.
+
+By the way there is an IANA registry for CONTEXTJ and CONTEXTO:
+
+http://www.iana.org/assignments/idna-tables-6.0.0/
+
+both U+200C and U+200D have a lookup result of "True" in the IDNA
+Contextual Rules registry and thus are CONTEXTJ (the other codepoints in
+that registry have a lookup result of "False" and thus are CONTEXTO).
 
 3.6 PrecisIgnorableProperties
 
+A codepoint is in the PrecisIgnorableProperties category if is a
+"Default_Ignorable_Code_Point" or "Noncharacter_Code_Point" in Unicode.
+These properties can be discovered from the DerivedCoreProperties.txt
+file in the Unicode Character Database.
 
-3.7 Controls
-
-
-3.8 OldHangulJamo
-
-
-3.9 LetterDigits
-
-
-3.10 OtherLetterDigits
-
-
-3.11 Spaces
-
-
-3.12 Symbols
-
-
-3.13 Punctuation
-
-
-3.14 HasCompat
-
-
-4. Running the Algorithm
+The DerivedCoreProperties.txt file is a bit hard to parse, but for our
+purposes we can do as we did for the UnicodeData.txt file: split each
+line on the semicolon character. When we run the algorithm, we'll need
+to search through the resulting data to find what we need.
 
 '''
 
-# END 
+#
+### BEGIN CODE ###
+#
+# code to pull in the DerivedCoreProperties.txt file
+# each line in the file becomes an entry in the dictionary
+#
+pdict = {};
+with open('DerivedCoreProperties.txt') as f:  
+    for line in f: 
+        data = line.split(';');
+        pdict[data[0]] = data;
+#
+### END CODE ###
+#
+
+'''
+
+3.7 Controls
+
+A Controls character is any codepoint with a Unicode General_Category of
+"Cc". We can figure this out from the "udict" structure that we created 
+above.
+
+3.8 OldHangulJamo
+
+The OldHangulJamo characters are older Korean characters that are no
+longer used in modern Korean. The data we need here can be found in the
+HangulSyllableType.txt file from the Unicode Character Database.
+
+Here again the data isn't as easy to parse as the UnicodeData.txt file,
+but we at least need to pull in the data and then we can massage it
+later.
+
+'''
+
+#
+### BEGIN CODE ###
+#
+# code to pull in the HangulSyllableType.txt file
+# each line in the file becomes an entry in the dictionary
+#
+hdict = {};
+with open('HangulSyllableType.txt') as f:  
+    for line in f: 
+        data = line.split(';');
+        hdict[data[0]] = data;
+#
+### END CODE ###
+#
+
+'''
+3.9 LetterDigits
+
+A LetterDigits character is any codepoint with a Unicode General_Category of
+"Ll", "Lu", "Lm", "Lo", "Mn", "Mc", or "Nd". We can figure this out from the 
+"udict" structure that we created above.
+
+3.10 OtherLetterDigits
+
+An OtherLetterDigits character is any codepoint with a Unicode 
+General_Category of "Lt", "Nl", "No", or "Me". We can figure this out from 
+the "udict" structure that we created above.
+
+3.11 Spaces
+
+A Spaces character is any codepoint with a Unicode General_Category of
+"Zs". We can figure this out from the "udict" structure that we created 
+above.
+
+3.12 Symbols
+
+A Symbols character is any codepoint with a Unicode General_Category of
+"Sm", "Sc", "Sk", or "So". We can figure this out from the "udict" 
+structure that we created above.
+
+3.13 Punctuation
+
+A Punctuation character is any codepoint with a Unicode General_Category 
+of "Pc", "Pd", "Ps", "Pe", "Pi", "Pf", or "Po". We can figure this out 
+from the "udict" structure that we created above.
+
+3.14 HasCompat
+
+It's complicated. ;-)
+
+In order words, TBD...
+
+###
+
+4. Running the Algorithm
+
+###
+
+5. Acknowledgements
+
+Thanks to Lance Stout for his help with Python topics.
+
+'''
+
+# THE END 
