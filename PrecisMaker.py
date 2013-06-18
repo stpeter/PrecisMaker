@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-"""
+'''
 
 PRECIS Maker
 by Peter Saint-Andre / stpeter@stpeter.im
@@ -95,7 +95,7 @@ the createtables script.
 Thankfully, the Python language contains core libraries that enable
 us to complete those tasks. Therefore we import the relevant libraries.
 
-"""
+'''
 
 ### BEGIN CODE ###
 # Code to import the code libraries we need
@@ -104,7 +104,7 @@ import sys
 import xml.dom.minidom
 ### END CODE ###
 
-"""
+'''
 
 3.0 Constructing Our Data
 
@@ -210,7 +210,81 @@ values for the derived property: UNASSIGNED, CONTEXTJ, CONTEXTO, and
 four values for PVALID or DISALLOWED in relation to a particular string
 class (thus ID_PVAL, ID_DIS, FREE_PVAL, and FREE_DIS).
 
-"""
+In particular, the PRECIS framework specification contains the following
+pseudocode (where "cp" stands for codepoint):
+
+   If .cp. .in. Exceptions Then Exceptions(cp);
+   Else If .cp. .in. BackwardCompatible Then BackwardCompatible(cp);
+   Else If .cp. .in. Unassigned Then UNASSIGNED;
+   Else If .cp. .in. ASCII7 Then PVALID;
+   Else If .cp. .in. JoinControl Then CONTEXTJ;
+   Else If .cp. .in. PrecisIgnorableProperties Then DISALLOWED;
+   Else If .cp. .in. Controls Then DISALLOWED;
+   Else If .cp. .in. OldHangulJamo Then DISALLOWED;
+   Else If .cp. .in. LetterDigits Then PVALID;
+   Else If .cp. .in. OtherLetterDigits Then SAFE_DIS or FREE_PVAL;
+   Else If .cp. .in. Spaces Then SAFE_DIS or FREE_PVAL;
+   Else If .cp. .in. Symbols Then SAFE_DIS or FREE_PVAL;
+   Else If .cp. .in. Punctuation Then SAFE_DIS or FREE_PVAL;
+   Else If .cp. .in. HasCompat Then SAFE_DIS or FREE_PVAL;
+   Else DISALLOWED;
+
+The following sections describe these categories in a bit more detail,
+from the perspective of preparing our data.
+
+'''
+
+'''
+
+3.1 Exceptions
+
+As mentioned, both IDNA2008 and PRECIS handle certain codepoints on an 
+exception basis. As specified in RFC 5892, the 41 codepoints in question 
+are:
+
+00B7 # MIDDLE DOT
+00DF # LATIN SMALL LETTER SHARP S
+0375 # GREEK LOWER NUMERAL SIGN (KERAIA)
+03C2 # GREEK SMALL LETTER FINAL SIGMA
+05F3 # HEBREW PUNCTUATION GERESH
+05F4 # HEBREW PUNCTUATION GERSHAYIM
+0640 # ARABIC TATWEEL
+0660 # ARABIC-INDIC DIGIT ZERO
+0661 # ARABIC-INDIC DIGIT ONE
+0662 # ARABIC-INDIC DIGIT TWO
+0663 # ARABIC-INDIC DIGIT THREE
+0664 # ARABIC-INDIC DIGIT FOUR
+0665 # ARABIC-INDIC DIGIT FIVE
+0666 # ARABIC-INDIC DIGIT SIX
+0667 # ARABIC-INDIC DIGIT SEVEN
+0668 # ARABIC-INDIC DIGIT EIGHT
+0669 # ARABIC-INDIC DIGIT NINE
+06F0 # EXTENDED ARABIC-INDIC DIGIT ZERO
+06F1 # EXTENDED ARABIC-INDIC DIGIT ONE
+06F2 # EXTENDED ARABIC-INDIC DIGIT TWO
+06F3 # EXTENDED ARABIC-INDIC DIGIT THREE
+06F4 # EXTENDED ARABIC-INDIC DIGIT FOUR
+06F5 # EXTENDED ARABIC-INDIC DIGIT FIVE
+06F6 # EXTENDED ARABIC-INDIC DIGIT SIX
+06F7 # EXTENDED ARABIC-INDIC DIGIT SEVEN
+06F8 # EXTENDED ARABIC-INDIC DIGIT EIGHT
+06F9 # EXTENDED ARABIC-INDIC DIGIT NINE
+06FD # ARABIC SIGN SINDHI AMPERSAND
+06FE # ARABIC SIGN SINDHI POSTPOSITION MEN
+07FA # NKO LAJANYALAN
+0F0B # TIBETAN MARK INTERSYLLABIC TSHEG
+3007 # IDEOGRAPHIC NUMBER ZERO
+302E # HANGUL SINGLE DOT TONE MARK
+302F # HANGUL DOUBLE DOT TONE MARK
+3031 # VERTICAL KANA REPEAT MARK
+3032 # VERTICAL KANA REPEAT WITH VOICED SOUND MARK
+3033 # VERTICAL KANA REPEAT MARK UPPER HALF
+3034 # VERTICAL KANA REPEAT WITH VOICED SOUND MARK UPPER HA
+3035 # VERTICAL KANA REPEAT MARK LOWER HALF
+303B # VERTICAL IDEOGRAPHIC ITERATION MARK
+30FB # KATAKANA MIDDLE DOT
+
+'''
 
 ### BEGIN CODE ###
 # create a Python dictionary of the code points in the Exceptions class
@@ -259,10 +333,65 @@ exceptions = dict([
 ])
 ### END CODE ###
 
-"""
+'''
+
+3.2 BackwardCompatible
+
+Currently, there are no characters in the BackwardCompatible category.
+Most people in the i18n community at the IETF seem to be hoping that
+this category is always empty. :-)
+
+If the category is ever non-empty, this PrecisMaker will be updated.
+
+3.3 Unassigned
+
+Some codepoints are unassigned: i.e., the codepoint exists in Unicode
+but so far no character has been assigned to that codepoint. There are
+many reason why this might be the case (e.g., a range of codepoints is
+being used for a particular script but not all the codepoints in that
+range have been used yet). If a codepoint has not yet been assigned, its
+derived property is UNASSIGNED in PRECIS. Do note that a status of
+unassigned applies to a particular version of Unicode, and a codepoint
+that is unassigned in the current version might be assigned in a future
+version. (Of course, that's true of all codepoints: their status is
+always subject to change as Unicode is updated over time.)
+
+
+3.4 ASCII7
+
+
+3.5 JoinControl
+
+
+3.6 PrecisIgnorableProperties
+
+
+3.7 Controls
+
+
+3.8 OldHangulJamo
+
+
+3.9 LetterDigits
+
+
+3.10 OtherLetterDigits
+
+
+3.11 Spaces
+
+
+3.12 Symbols
+
+
+3.13 Punctuation
+
+
+3.14 HasCompat
+
 
 4. Running the Algorithm
 
-"""
+'''
 
 # END 
