@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-" " "
+"""
 
 PRECIS Maker
 by Peter Saint-Andre / stpeter@stpeter.im
@@ -95,7 +95,7 @@ the createtables script.
 Thankfully, the Python language contains core libraries that enable
 us to complete those tasks. Therefore we import the relevant libraries.
 
-" " "
+"""
 
 ### BEGIN CODE ###
 # Code to import the code libraries we need
@@ -104,7 +104,7 @@ import sys
 import xml.dom.minidom
 ### END CODE ###
 
-" " "
+"""
 
 3.0 Constructing Our Data
 
@@ -210,18 +210,59 @@ values for the derived property: UNASSIGNED, CONTEXTJ, CONTEXTO, and
 four values for PVALID or DISALLOWED in relation to a particular string
 class (thus ID_PVAL, ID_DIS, FREE_PVAL, and FREE_DIS).
 
-" " "
+"""
 
 ### BEGIN CODE ###
 # create a Python dictionary of the code points in the Exceptions class
 # this dictionary follows the order in RFC 5892
-exceptions = dict([ ('00DF','PVALID'), ('03C2','PVALID'), ('06FD','PVALID'), ('06FE','PVALID'), ('0F0B','PVALID'), ('3007','PVALID'), ('00B7','CONTEXTO'), ('0375','CONTEXTO'), ('05F3','CONTEXTO'), ('05F4','CONTEXTO'), ('30FB','CONTEXTO'), ('0660','CONTEXTO'), ('0661','CONTEXTO'), ('0662','CONTEXTO'), ('0663','CONTEXTO'), ('0664','CONTEXTO'), ('0665','CONTEXTO'), ('0666','CONTEXTO'), ('0667','CONTEXTO'), ('0668','CONTEXTO'), ('0669','CONTEXTO'), ('06F1','CONTEXTO'), ('06F2','CONTEXTO'), ('06F3','CONTEXTO'), ('06F4','CONTEXTO'), ('06F5','CONTEXTO'), ('06F6','CONTEXTO'), ('06F7','CONTEXTO'), ('06F8','CONTEXTO'), ('06F9','CONTEXTO'), ('0640','DISALLOWED'), ('07FA','DISALLOWED'), ('302E','DISALLOWED'), ('302F','DISALLOWED'), ('3031','DISALLOWED'), ('3032','DISALLOWED'), ('3033','DISALLOWED'), ('3034','DISALLOWED'), ('3035','DISALLOWED'), ('303B','DISALLOWED')])
+exceptions = dict([ 
+    ('00DF','PVALID'), 
+    ('03C2','PVALID'), 
+    ('06FD','PVALID'), 
+    ('06FE','PVALID'), 
+    ('0F0B','PVALID'), 
+    ('3007','PVALID'), 
+    ('00B7','CONTEXTO'), 
+    ('0375','CONTEXTO'), 
+    ('05F3','CONTEXTO'), 
+    ('05F4','CONTEXTO'), 
+    ('30FB','CONTEXTO'), 
+    ('0660','CONTEXTO'), 
+    ('0661','CONTEXTO'), 
+    ('0662','CONTEXTO'), 
+    ('0663','CONTEXTO'), 
+    ('0664','CONTEXTO'), 
+    ('0665','CONTEXTO'), 
+    ('0666','CONTEXTO'), 
+    ('0667','CONTEXTO'), 
+    ('0668','CONTEXTO'), 
+    ('0669','CONTEXTO'), 
+    ('06F1','CONTEXTO'), 
+    ('06F2','CONTEXTO'), 
+    ('06F3','CONTEXTO'), 
+    ('06F4','CONTEXTO'), 
+    ('06F5','CONTEXTO'), 
+    ('06F6','CONTEXTO'), 
+    ('06F7','CONTEXTO'), 
+    ('06F8','CONTEXTO'), 
+    ('06F9','CONTEXTO'), 
+    ('0640','DISALLOWED'), 
+    ('07FA','DISALLOWED'), 
+    ('302E','DISALLOWED'), 
+    ('302F','DISALLOWED'), 
+    ('3031','DISALLOWED'), 
+    ('3032','DISALLOWED'), 
+    ('3033','DISALLOWED'), 
+    ('3034','DISALLOWED'), 
+    ('3035','DISALLOWED'), 
+    ('303B','DISALLOWED')
+])
 ### END CODE ###
 
-" " " Running the Algorithm
+"""
 
 4. Running the Algorithm
 
-" " "
+"""
 
 # END 
