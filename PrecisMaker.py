@@ -543,9 +543,6 @@ The OldHangulJamo characters are older Korean characters that are no
 longer used in modern Korean. The data we need here can be found in the
 HangulSyllableType.txt file from the Unicode Character Database.
 
-Here again the data isn't as easy to parse as the UnicodeData.txt file,
-but we at least need to pull in the data and then we can massage it
-later.
 
 '''
 
@@ -555,11 +552,24 @@ later.
 # code to pull in the HangulSyllableType.txt file
 # each line in the file becomes an entry in the dictionary
 #
-hdict = {};
+hstdict = {};
 with open('HangulSyllableType.txt') as f:  
     for line in f: 
         data = line.split(';');
-        hdict[data[0]] = data;
+        hstdict[data[0]] = data;
+# 
+# we care only about lines that define Hangul Syllable Types of 
+# Leading_Jamo, Vowel_Jamo, and Trailing_Jamo
+# 
+for v in hstdict.itervalues():
+   if len(v) > 1:
+       seconditem = v[1] + "";
+       if seconditem.startswith(' L #') or seconditem.startswith(' V #') or seconditem.startswith(' T #'):
+           print "codepoints " + v[0] + " are OldHangulJamo!"
+#
+# define a function to determine if a codepoint is OldHangulJamo
+#
+# def isOldHangulJamo(cp):
 #
 ### END CODE ###
 #
@@ -717,35 +727,51 @@ pseudocode from the PRECIS framework specification.
 #
 # code to determine the status of each codepoint
 #
+# create a status dictionary
+status = {};
 for k in udict.iteritems():
     cp = k[0]
     if isExceptions(cp) == 1:
-        print "U+" + cp + " is Exceptions";
+        status[cp] = exceptions[cp]
+        # print "U+" + cp + " is Exceptions and has status " + status[cp];
     #elif isBackwardCompatible(cp) == 1:        # no-op for now
+    #elif isUnassigned(cp) == 1:
     elif isASCII7(cp) == 1:
-        print "U+" + cp + " is ASCII7";
+        status[cp] = "PVALID"
+        # print "U+" + cp + " is ASCII7 and has status " + status[cp];
     elif isJoinControl(cp) == 1:
-        print "U+" + cp + " is JoinControl";
+        status[cp] = "CONTEXTJ"
+        # print "U+" + cp + " is JoinControl and has status " + status[cp];
     #elif isPrecisIgnorableProperties(cp) == 1:
-    #    print "U+" + cp + " is PrecisIgnorableProperties";
+    #    status[cp] = "DISALLOWED"
+    #    print "U+" + cp + " is PrecisIgnorableProperties and has status " + status[cp];
     elif isControls(cp) == 1:
-        print "U+" + cp + " is Controls";
+        status[cp] = "DISALLOWED"
+        # print "U+" + cp + " is Controls and has status " + status[cp];
     #elif isOldHangulJamo(cp) == 1:
-    #    print "U+" + cp + " is OldHangulJamo";
+        # status[cp] = "DISALLOWED"
+        # print "U+" + cp + " is OldHangulJamo and has status " + status[cp];
     elif isLetterDigits(cp) == 1:
-        print "U+" + cp + " is LetterDigits";
+        status[cp] = "PVALID"
+        # print "U+" + cp + " is LetterDigits and has status " + status[cp];
     elif isOtherLetterDigits(cp) == 1:
-        print "U+" + cp + " is OtherLetterDigits";
+        status[cp] = "FREE_PVAL"
+        # print "U+" + cp + " is OtherLetterDigits and has status " + status[cp];
     elif isSpaces(cp) == 1:
-        print "U+" + cp + " is Spaces";
+        status[cp] = "FREE_PVAL"
+        # print "U+" + cp + " is Spaces and has status " + status[cp];
     elif isSymbols(cp) == 1:
-        print "U+" + cp + " is Symbols";
+        status[cp] = "FREE_PVAL"
+        # print "U+" + cp + " is Symbols and has status " + status[cp];
     elif isPunctuation(cp) == 1:
-        print "U+" + cp + " is Punctuation";
+        status[cp] = "FREE_PVAL"
+        # print "U+" + cp + " is Punctuation and has status " + status[cp];
     #elif isHasCompat(cp) == 1:
+    #    status[cp] = "FREE_PVAL"
     #    print "U+" + cp + " is HasCompat";
     else:
-        print "U+" + cp + " is DISALLOWED";
+        status[cp] = "DISALLOWED"
+        print "U+" + cp + " is DISALLOWED by default";
 #
 ### END CODE ###
 #
