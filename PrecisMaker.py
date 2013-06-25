@@ -565,11 +565,29 @@ with open('HangulSyllableType.txt') as f:
 #
 
 '''
+
 3.9 LetterDigits
 
 A LetterDigits character is any codepoint with a Unicode General_Category of
 "Ll", "Lu", "Lm", "Lo", "Mn", "Mc", or "Nd". We can figure this out from the 
 "udict" structure that we created above.
+
+'''
+
+#
+### BEGIN CODE ###
+#
+# define a function to determine if a codepoint is in LetterDigits
+#
+def isLetterDigits(cp):
+    item = udict[cp]
+    if item[2] == "Ll" or "Lu" or "Lm" or "Lo" or "Mn" or "Mc" or "Nd":
+        return 1
+#
+### END CODE ###
+#
+
+'''
 
 3.10 OtherLetterDigits
 
@@ -577,11 +595,45 @@ An OtherLetterDigits character is any codepoint with a Unicode
 General_Category of "Lt", "Nl", "No", or "Me". We can figure this out from 
 the "udict" structure that we created above.
 
+'''
+
+#
+### BEGIN CODE ###
+#
+# define a function to determine if a codepoint is in OtherLetterDigits
+#
+def isSymbols(cp):
+    item = udict[cp]
+    if item[2] == "Lt" or "Nl" or "No" or "Me":
+        return 1
+#
+### END CODE ###
+#
+
+'''
+
 3.11 Spaces
 
 A Spaces character is any codepoint with a Unicode General_Category of
 "Zs". We can figure this out from the "udict" structure that we created 
 above.
+
+'''
+
+#
+### BEGIN CODE ###
+#
+# define a function to determine if a codepoint is in Spaces
+#
+def isSpaces(cp):
+    item = udict[cp]
+    if item[2] == "Zs":
+        return 1
+#
+### END CODE ###
+#
+
+'''
 
 3.12 Symbols
 
@@ -589,11 +641,45 @@ A Symbols character is any codepoint with a Unicode General_Category of
 "Sm", "Sc", "Sk", or "So". We can figure this out from the "udict" 
 structure that we created above.
 
+'''
+
+#
+### BEGIN CODE ###
+#
+# define a function to determine if a codepoint is in Symbols
+#
+def isSymbols(cp):
+    item = udict[cp]
+    if item[2] == "Sm" or "Sc" or "Sk" or "So":
+        return 1
+#
+### END CODE ###
+#
+
+'''
+
 3.13 Punctuation
 
 A Punctuation character is any codepoint with a Unicode General_Category 
 of "Pc", "Pd", "Ps", "Pe", "Pi", "Pf", or "Po". We can figure this out 
 from the "udict" structure that we created above.
+
+'''
+
+#
+### BEGIN CODE ###
+#
+# define a function to determine if a codepoint is in Punctuation
+#
+def isPunctuation(cp):
+    item = udict[cp]
+    if item[2] == "Pc" or "Pd" or "Ps" or "Pi" or "Pf" or "Po":
+        return 1
+#
+### END CODE ###
+#
+
+'''
 
 3.14 HasCompat
 
@@ -635,12 +721,29 @@ for k in udict.iteritems():
     cp = k[0]
     if isExceptions(cp) == 1:
         print "U+" + cp + " is Exceptions";
+    #elif isBackwardCompatible(cp) == 1:        # no-op for now
     elif isASCII7(cp) == 1:
         print "U+" + cp + " is ASCII7";
     elif isJoinControl(cp) == 1:
         print "U+" + cp + " is JoinControl";
+    #elif isPrecisIgnorableProperties(cp) == 1:
+    #    print "U+" + cp + " is PrecisIgnorableProperties";
     elif isControls(cp) == 1:
         print "U+" + cp + " is Controls";
+    #elif isOldHangulJamo(cp) == 1:
+    #    print "U+" + cp + " is OldHangulJamo";
+    elif isLetterDigits(cp) == 1:
+        print "U+" + cp + " is LetterDigits";
+    elif isOtherLetterDigits(cp) == 1:
+        print "U+" + cp + " is OtherLetterDigits";
+    elif isSpaces(cp) == 1:
+        print "U+" + cp + " is Spaces";
+    elif isSymbols(cp) == 1:
+        print "U+" + cp + " is Symbols";
+    elif isPunctuation(cp) == 1:
+        print "U+" + cp + " is Punctuation";
+    #elif isHasCompat(cp) == 1:
+    #    print "U+" + cp + " is HasCompat";
     else:
         print "U+" + cp + " is DISALLOWED";
 #
