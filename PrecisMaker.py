@@ -266,6 +266,7 @@ udict = {};
 with open('UnicodeData.txt') as f:  
     for line in f: 
         data = line.split(';');
+        #print data                     # for debugging
         udict[data[0]] = data;
 #
 ### END CODE ###
@@ -331,6 +332,7 @@ are:
 #
 # create a Python dictionary of the code points in the Exceptions class
 # this dictionary follows the order in RFC 5892
+#
 exceptions = dict([ 
     ('00DF','PVALID'), 
     ('03C2','PVALID'), 
@@ -373,6 +375,14 @@ exceptions = dict([
     ('3035','DISALLOWED'), 
     ('303B','DISALLOWED')
 ])
+
+#
+# define a function that determines if a codepoint is in the 
+# Exceptions category
+#
+def isExceptions(cp):
+    if cp in exceptions:
+        return 1
 #
 ### END CODE ###
 #
@@ -397,14 +407,42 @@ range have been used yet). If a codepoint has not yet been assigned, its
 derived property is UNASSIGNED in PRECIS. Do note that a status of
 unassigned applies to a particular version of Unicode, and a codepoint
 that is unassigned in the current version might be assigned in a future
-version. (Of course, that's true of all codepoints: their status is
-always subject to change as Unicode is updated over time.)
+version. (Of course, that's the case with all codepoints: their status 
+is always subject to change as Unicode is updated over time.)
+
+The UnicodeData.txt file contains entries for assigned codepoints, but
+not for unassigned codepoints. Therefore we need to discover which
+codepoints are unassigned through a process of interpolation. This is
+slightly inconvenient, but unavoidable (if the UnicodeData.txt file
+contained one line for each codepoint, it would have more than one
+million lines!).
 
 3.4 ASCII7
 
 For our purposes, an ASCII7 character is a codepoint between U+0021 and
-U+007E. We don't need to read in any data from the Unicode Character
-Database to figure out that such a codepoint is PVALID.
+U+007E inclusive. We don't need to read in any data from the Unicode 
+Character Database to determine that such a codepoint is PVALID.
+Probably the easiest way to do this is to see if the integer (base 10)
+equivalent of the codepoint number in hexadecimal (base 16) is between
+33 and 126 inclusive.
+
+'''
+
+#
+### BEGIN CODE ###
+#
+# code to determine if a codepoint is in the ASCII7 category
+#
+def isASCII7(cp):
+    udec = int(cp,16)
+    if 33 <= udec <= 126:
+        #print udec
+        return 1
+#
+### END CODE ###
+#
+
+'''
 
 3.5 JoinControl
 
@@ -422,9 +460,25 @@ By the way there is an IANA registry for CONTEXTJ and CONTEXTO:
 
 http://www.iana.org/assignments/idna-tables-6.0.0/
 
-both U+200C and U+200D have a lookup result of "True" in the IDNA
+Both U+200C and U+200D have a lookup result of "True" in the IDNA
 Contextual Rules registry and thus are CONTEXTJ (the other codepoints in
 that registry have a lookup result of "False" and thus are CONTEXTO).
+
+'''
+
+#
+### BEGIN CODE ###
+#
+# code to determine if a codepoint is in the JoinControl category
+#
+def isJoinControl(cp):
+    if cp == "200C" or cp == "200D":
+        return 1
+#
+### END CODE ###
+#
+
+'''
 
 3.6 PrecisIgnorableProperties
 
@@ -435,8 +489,7 @@ file in the Unicode Character Database.
 
 The DerivedCoreProperties.txt file is a bit hard to parse, but for our
 purposes we can do as we did for the UnicodeData.txt file: split each
-line on the semicolon character. When we run the algorithm, we'll need
-to search through the resulting data to find what we need.
+line on the semicolon character. 
 
 '''
 
@@ -457,11 +510,32 @@ with open('DerivedCoreProperties.txt') as f:
 
 '''
 
+When we run the algorithm, we'll need
+to search through the resulting data to find what we need.
+
 3.7 Controls
 
 A Controls character is any codepoint with a Unicode General_Category of
 "Cc". We can figure this out from the "udict" structure that we created 
-above.
+above. Specifically, we need to check if the third entry in the udict
+structure is "Cc" for this codepoint.
+
+'''
+
+#
+### BEGIN CODE ###
+#
+# code to determine if a codepoint is in the Controls category
+#
+def isControls(cp):
+    item = udict[cp]
+    if item[2] == "Cc":
+        return 1
+#
+### END CODE ###
+#
+
+'''
 
 3.8 OldHangulJamo
 
@@ -523,19 +597,63 @@ from the "udict" structure that we created above.
 
 3.14 HasCompat
 
-It's complicated. ;-)
-
-In order words, TBD...
+It's complicated. ;-) However, we can determine whether a character has
+a compatibility equivalent from the "udict" structure that we created
+above.
 
 ###
 
 4. Running the Algorithm
 
+Now that we have the data we need, we can run the algorithm. Here is the
+pseudocode from the PRECIS framework specification.
+
+   If .cp. .in. Exceptions Then Exceptions(cp);
+   Else If .cp. .in. BackwardCompatible Then BackwardCompatible(cp);
+   Else If .cp. .in. Unassigned Then UNASSIGNED;
+   Else If .cp. .in. ASCII7 Then PVALID;
+   Else If .cp. .in. JoinControl Then CONTEXTJ;
+   Else If .cp. .in. PrecisIgnorableProperties Then DISALLOWED;
+   Else If .cp. .in. Controls Then DISALLOWED;
+   Else If .cp. .in. OldHangulJamo Then DISALLOWED;
+   Else If .cp. .in. LetterDigits Then PVALID;
+   Else If .cp. .in. OtherLetterDigits Then SAFE_DIS or FREE_PVAL;
+   Else If .cp. .in. Spaces Then SAFE_DIS or FREE_PVAL;
+   Else If .cp. .in. Symbols Then SAFE_DIS or FREE_PVAL;
+   Else If .cp. .in. Punctuation Then SAFE_DIS or FREE_PVAL;
+   Else If .cp. .in. HasCompat Then SAFE_DIS or FREE_PVAL;
+   Else DISALLOWED;
+
+'''
+
+#
+### BEGIN CODE ###
+#
+# code to determine the status of each codepoint
+#
+for k in udict.iteritems():
+    cp = k[0]
+    if isExceptions(cp) == 1:
+        print "U+" + cp + " is Exceptions";
+    elif isASCII7(cp) == 1:
+        print "U+" + cp + " is ASCII7";
+    elif isJoinControl(cp) == 1:
+        print "U+" + cp + " is JoinControl";
+    elif isControls(cp) == 1:
+        print "U+" + cp + " is Controls";
+    else:
+        print "U+" + cp + " is DISALLOWED";
+#
+### END CODE ###
+#
+
+'''
+
 ###
 
 5. Acknowledgements
 
-Thanks to Lance Stout for his help with Python topics.
+Thanks to Lance Stout for his help with Python issues.
 
 '''
 
