@@ -560,16 +560,32 @@ with open('HangulSyllableType.txt') as f:
 # 
 # we care only about lines that define Hangul Syllable Types of 
 # Leading_Jamo, Vowel_Jamo, and Trailing_Jamo
+#
+# therefore we create a list of such codepoints
 # 
+ohj = [];
 for v in hstdict.itervalues():
    if len(v) > 1:
-       seconditem = v[1] + "";
-       if seconditem.startswith(' L #') or seconditem.startswith(' V #') or seconditem.startswith(' T #'):
-           print "codepoints " + v[0] + " are OldHangulJamo!"
+       secondvalue = v[1] + "";
+       if secondvalue.startswith(' L #') or secondvalue.startswith(' V #') or secondvalue.startswith(' T #'):
+           firstvalue = v[0] + "";
+           firstvalue = firstvalue.strip();
+           therange = firstvalue.split('..');
+           rangestart = therange[0];
+           rangeend = therange[1];
+           intbottom = int(rangestart,16);
+           inttop = int(rangeend,16);
+           thisrange = range(intbottom, inttop, 1);
+           for i in thisrange:
+               ohj.append(i)
 #
 # define a function to determine if a codepoint is OldHangulJamo
 #
-# def isOldHangulJamo(cp):
+def isOldHangulJamo(cp):
+    item = udict[cp]
+    itemint = int(item[0],16)
+    if itemint in ohj:
+        return 1
 #
 ### END CODE ###
 #
@@ -748,9 +764,9 @@ for k in udict.iteritems():
     elif isControls(cp) == 1:
         status[cp] = "DISALLOWED"
         # print "U+" + cp + " is Controls and has status " + status[cp];
-    #elif isOldHangulJamo(cp) == 1:
-        # status[cp] = "DISALLOWED"
-        # print "U+" + cp + " is OldHangulJamo and has status " + status[cp];
+    elif isOldHangulJamo(cp) == 1:
+        status[cp] = "DISALLOWED"
+        print "U+" + cp + " is OldHangulJamo and has status " + status[cp];
     elif isLetterDigits(cp) == 1:
         status[cp] = "PVALID"
         # print "U+" + cp + " is LetterDigits and has status " + status[cp];
