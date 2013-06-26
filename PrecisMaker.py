@@ -109,7 +109,6 @@ us to complete those tasks. Therefore we import the relevant libraries.
 # Code to import the code libraries we need
 import os
 import sys
-import xml.dom.minidom
 #
 # also set a flag for debugging
 #
@@ -781,6 +780,70 @@ It's complicated. ;-) However, we can determine whether a character has
 a compatibility equivalent from the "udict" structure that we created
 above.
 
+One way to determine if a character has a compatibility equivalent is to
+run the NFKC normalization routine on the character: if the output of
+NFKC (which might be one or more codepoints) is different from the 
+codepoint we used as input, then the character is in HasCompat.
+
+However, using Unicode Normalization Form KC (NFKC) is dependent on
+having an NFKC function. For the purposes of PrecisMaker, we prefer to
+use only the raw files from the Unicode Character Database (ucd).
+
+Thankfully, we can figure out if a code point has a compatibility
+equivalent by looking in the "udict" structure. Consider the character
+"VULGAR FRACTION ONE QUARTER" (why it's vulgar I have no idea). The line
+in UnicodeData.txt for this codepoint starts out like so:
+
+00BC;VULGAR FRACTION ONE QUARTER;No;0;ON;<fraction> 0031 2044 0034;
+
+The sixth entry in this line tells us that codepoint 00BC is 
+compatibly equivalent to the codepoints 0031 2044 0034, i.e.:
+
+0031;DIGIT ONE
+2044;FRACTION SLASH
+0034;DIGIT FOUR
+
+This entry also tells us the specific type of compatibility equivalence, 
+in this case "<fraction>". In addition to the generic "<compat>" type,
+there are several specific types:
+
+o <circle>
+o <final>
+o <font>
+o <fraction>
+o <isolated>
+o <medial>
+o <noBreak>
+o <narrow>
+o <small>
+o <super>
+o <sub>
+o <vertical>
+o <wide>
+
+Thus a crude way to guess if a codepoint is compatibly equivalent to
+another codepoint or sequence of codepoints is to to look for the
+compatibility type in the sixth entry of each line. That's what we do in
+PrecisMaker right now, although the method might be improved in a future
+version after we've carefully checked the output of the current version.
+
+'''
+
+#
+### BEGIN CODE ###
+#
+# define a function to determine if a codepoint is in HasCompat
+#
+def isHasCompat(cp):
+    item = udict[cp]
+    if item[5].startswith('<'):
+        return 1
+#
+### END CODE ###
+#
+
+'''
+
 ###
 
 4. Running the Algorithm
@@ -861,6 +924,22 @@ for p in urange:
     elif isOldHangulJamo(cp) == 1:
         status[cp] = "DISALLOWED"
         if debug == 1: print "U+" + cp + " is OldHangulJamo and has status " + status[cp];
+    #
+    # NOTE: PrecisMaker provisionally performs HasCompat checking before
+    # LetterDigits. This order is different from the PRECIS framework
+    # specification, which performs HasCompat checking last. The results
+    # using the specified order seem wrong. I will raise this issue on
+    # the precis@ietf.org discusion list.
+    #
+    elif isHasCompat(cp) == 1:
+        status[cp] = "FREE_PVAL"
+        # additional lines for debugging
+        item = udict[cp]
+        compat = item[5]
+        cdata = compat.split('>');
+        ctype = cdata[0]
+        cpoints = cdata[1]
+        if debug == 1: print "U+" + cp + " has a compatibility equivalence of type " + ctype + "> to the codepoint(s)" + cpoints + " and a status of " + status[cp];
     elif isLetterDigits(cp) == 1:
         status[cp] = "PVALID"
         if debug == 1: print "U+" + cp + " is LetterDigits and has status " + status[cp];
@@ -876,9 +955,6 @@ for p in urange:
     elif isPunctuation(cp) == 1:
         status[cp] = "FREE_PVAL"
         if debug == 1: print "U+" + cp + " is Punctuation and has status " + status[cp];
-    #elif isHasCompat(cp) == 1:
-    #    status[cp] = "FREE_PVAL"
-    #    print "U+" + cp + " is HasCompat";
     else:
         status[cp] = "DISALLOWED"
         if debug == 1: print "U+" + cp + " is DISALLOWED by default";
