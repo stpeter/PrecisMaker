@@ -531,11 +531,47 @@ line on the semicolon character.
 # code to pull in the DerivedCoreProperties.txt file
 # each line in the file becomes an entry in the dictionary
 #
-pdict = {};
+dcpdict = {};
 with open('DerivedCoreProperties.txt') as f:  
     for line in f: 
         data = line.split(';');
-        pdict[data[0]] = data;
+        dcpdict[data[0]] = data;
+#
+# define a function to determine if a codepoint is in
+# PrecisIgnorableProperties
+#
+# we care only about lines that define Default_Ignorable_Code_Point
+#
+# therefore we create a list of such codepoints
+# 
+dicp = [];
+for v in dcpdict.itervalues():
+   if len(v) > 1:
+       secondvalue = v[1] + "";
+       if secondvalue.startswith(' Default_Ignorable_Code_Point #'):
+           firstvalue = v[0] + "";
+           firstvalue = firstvalue.strip();
+           therange = firstvalue.split('..');
+           if len(therange) == 1:
+              cpint = int(therange[0],16);
+              dicp.append(cpint)
+           else:
+               rangestart = therange[0];
+               rangeend = therange[1];
+               intbottom = int(rangestart,16);
+               inttop = int(rangeend,16);
+               thisrange = range(intbottom, inttop, 1);
+               for i in thisrange:
+                   dicp.append(i)
+#
+# define a function to determine if a codepoint is
+# Default_Ignorable_Code_Point
+#
+def isPrecisIgnorableProperties(cp):
+    item = udict[cp]
+    itemint = int(item[0],16)
+    if itemint in dicp:
+        return 1
 #
 ### END CODE ###
 #
@@ -561,7 +597,7 @@ structure is "Cc" for this codepoint.
 #
 def isControls(cp):
     item = udict[cp]
-    if item[2] in ('Cc'):
+    if item[2] in ('Cc',):
         return 1
 #
 ### END CODE ###
@@ -685,7 +721,7 @@ above.
 #
 def isSpaces(cp):
     item = udict[cp]
-    if item[2] in ('Zs'):
+    if item[2] in ('Zs',):
         return 1
 #
 ### END CODE ###
@@ -796,10 +832,13 @@ urange = range(intfirst, intlast, 1);
 for p in urange:
     # convert each integer to hex
     phex = hex(p);
+    # for Unicode purposes we don't want the leading "0x"
     phex = phex.replace('0x','');
+    # also, our codepoint numbers need at least 4 digits
     phex = phex.rjust(4,'0')
+    # just to be safe, make sure all alpha characters are uppercase
     cp = phex.swapcase();
-    # now that we have the hex, check each PRECIS category
+    # now that we have the codepoint, check each PRECIS category
     if isExceptions(cp) == 1:
         status[cp] = exceptions[cp]
         if debug == 1: print "U+" + cp + " is Exceptions and has status " + status[cp];
@@ -813,9 +852,9 @@ for p in urange:
     elif isJoinControl(cp) == 1:
         status[cp] = "CONTEXTJ"
         if debug == 1: print "U+" + cp + " is JoinControl and has status " + status[cp];
-    #elif isPrecisIgnorableProperties(cp) == 1:
-    #    status[cp] = "DISALLOWED"
-    #    print "U+" + cp + " is PrecisIgnorableProperties and has status " + status[cp];
+    elif isPrecisIgnorableProperties(cp) == 1:
+        status[cp] = "DISALLOWED"
+        if debug == 1: print "U+" + cp + " is PrecisIgnorableProperties and has status " + status[cp];
     elif isControls(cp) == 1:
         status[cp] = "DISALLOWED"
         if debug == 1: print "U+" + cp + " is Controls and has status " + status[cp];
