@@ -111,6 +111,10 @@ import os
 import sys
 import xml.dom.minidom
 #
+# also set a flag for debugging
+#
+debug = 1;
+#
 ### END CODE ###
 #
 
@@ -266,8 +270,15 @@ udict = {};
 with open('UnicodeData.txt') as f:  
     for line in f: 
         data = line.split(';');
-        #print data                     # for debugging
         udict[data[0]] = data;
+#
+# also create a dictionary of integer equivalents for known codepoints
+#
+idict = {};
+for k in udict.iteritems():
+    thiscp = k[0];
+    cpint = int(thiscp,16);
+    idict[data[0]] = cpint;
 #
 ### END CODE ###
 #
@@ -375,10 +386,8 @@ exceptions = dict([
     ('3035','DISALLOWED'), 
     ('303B','DISALLOWED')
 ])
-
 #
-# define a function that determines if a codepoint is in the 
-# Exceptions category
+# define a function that determines if a codepoint is in Exceptions
 #
 def isExceptions(cp):
     if cp in exceptions:
@@ -417,6 +426,30 @@ slightly inconvenient, but unavoidable (if the UnicodeData.txt file
 contained one line for each codepoint, it would have more than one
 million lines!).
 
+One way to determine if a codepoint is unassigned is to establish the
+complete range of Unicode characters (i.e., from U+0000 to U+10FFFD) and
+check to see what codepoints we know about in that range; if the
+codepoint can't be found in that list, then it is unassigned.
+
+'''
+
+#
+### BEGIN CODE ###
+#
+# check if a particular codepoint is in our dictionary of known
+# codepoints
+#
+def isUnassigned(cp):
+    if cp in udict:
+        return 0
+    else:
+        return 1
+#
+### END CODE ###
+#
+
+'''
+
 3.4 ASCII7
 
 For our purposes, an ASCII7 character is a codepoint between U+0021 and
@@ -436,7 +469,6 @@ equivalent of the codepoint number in hexadecimal (base 16) is between
 def isASCII7(cp):
     udec = int(cp,16)
     if 33 <= udec <= 126:
-        #print udec
         return 1
 #
 ### END CODE ###
@@ -529,7 +561,7 @@ structure is "Cc" for this codepoint.
 #
 def isControls(cp):
     item = udict[cp]
-    if item[2] == "Cc":
+    if item[2] in ('Cc'):
         return 1
 #
 ### END CODE ###
@@ -607,7 +639,7 @@ A LetterDigits character is any codepoint with a Unicode General_Category of
 #
 def isLetterDigits(cp):
     item = udict[cp]
-    if item[2] == "Ll" or "Lu" or "Lm" or "Lo" or "Mn" or "Mc" or "Nd":
+    if item[2] in ('Ll', 'Lu', 'Lm', 'Lo', 'Mn', 'Mc', 'Nd'):
         return 1
 #
 ### END CODE ###
@@ -628,9 +660,9 @@ the "udict" structure that we created above.
 #
 # define a function to determine if a codepoint is in OtherLetterDigits
 #
-def isSymbols(cp):
+def isOtherLetterDigits(cp):
     item = udict[cp]
-    if item[2] == "Lt" or "Nl" or "No" or "Me":
+    if item[2] in ('Lt', 'Nl', 'No', 'Me'):
         return 1
 #
 ### END CODE ###
@@ -743,51 +775,74 @@ pseudocode from the PRECIS framework specification.
 #
 # code to determine the status of each codepoint
 #
-# create a status dictionary
+# first create a dictionary specifying the status of each codepoint
+#
 status = {};
-for k in udict.iteritems():
-    cp = k[0]
+#
+# create a range of all possible codepoints (even the ones that have not
+# yet been assigned); note that the range is a range of integers, so we
+# will need to convert them back to hex below...
+#
+firstcp = "0000";
+lastcp = "10FFFD";
+intfirst = int(firstcp,16);
+intlast = int(lastcp,16);
+urange = range(intfirst, intlast, 1);
+#
+# here we iterate through all the codepoints and, for each one, call a
+# series of functions that tell us whether the codepoint is in the 
+# relevant PRECIS category
+#
+for p in urange:
+    # convert each integer to hex
+    phex = hex(p);
+    phex = phex.replace('0x','');
+    phex = phex.rjust(4,'0')
+    cp = phex.swapcase();
+    # now that we have the hex, check each PRECIS category
     if isExceptions(cp) == 1:
         status[cp] = exceptions[cp]
-        # print "U+" + cp + " is Exceptions and has status " + status[cp];
+        if debug == 1: print "U+" + cp + " is Exceptions and has status " + status[cp];
     #elif isBackwardCompatible(cp) == 1:        # no-op for now
-    #elif isUnassigned(cp) == 1:
+    elif isUnassigned(cp) == 1:
+        status[cp] = "UNASSIGNED"
+        if debug == 1: print "U+" + cp + " is Unassigned";
     elif isASCII7(cp) == 1:
         status[cp] = "PVALID"
-        # print "U+" + cp + " is ASCII7 and has status " + status[cp];
+        if debug == 1: print "U+" + cp + " is ASCII7 and has status " + status[cp];
     elif isJoinControl(cp) == 1:
         status[cp] = "CONTEXTJ"
-        # print "U+" + cp + " is JoinControl and has status " + status[cp];
+        if debug == 1: print "U+" + cp + " is JoinControl and has status " + status[cp];
     #elif isPrecisIgnorableProperties(cp) == 1:
     #    status[cp] = "DISALLOWED"
     #    print "U+" + cp + " is PrecisIgnorableProperties and has status " + status[cp];
     elif isControls(cp) == 1:
         status[cp] = "DISALLOWED"
-        # print "U+" + cp + " is Controls and has status " + status[cp];
+        if debug == 1: print "U+" + cp + " is Controls and has status " + status[cp];
     elif isOldHangulJamo(cp) == 1:
         status[cp] = "DISALLOWED"
-        print "U+" + cp + " is OldHangulJamo and has status " + status[cp];
+        if debug == 1: print "U+" + cp + " is OldHangulJamo and has status " + status[cp];
     elif isLetterDigits(cp) == 1:
         status[cp] = "PVALID"
-        # print "U+" + cp + " is LetterDigits and has status " + status[cp];
+        if debug == 1: print "U+" + cp + " is LetterDigits and has status " + status[cp];
     elif isOtherLetterDigits(cp) == 1:
         status[cp] = "FREE_PVAL"
-        # print "U+" + cp + " is OtherLetterDigits and has status " + status[cp];
+        if debug == 1: print "U+" + cp + " is OtherLetterDigits and has status " + status[cp];
     elif isSpaces(cp) == 1:
         status[cp] = "FREE_PVAL"
-        # print "U+" + cp + " is Spaces and has status " + status[cp];
+        if debug == 1: print "U+" + cp + " is Spaces and has status " + status[cp];
     elif isSymbols(cp) == 1:
         status[cp] = "FREE_PVAL"
-        # print "U+" + cp + " is Symbols and has status " + status[cp];
+        if debug == 1: print "U+" + cp + " is Symbols and has status " + status[cp];
     elif isPunctuation(cp) == 1:
         status[cp] = "FREE_PVAL"
-        # print "U+" + cp + " is Punctuation and has status " + status[cp];
+        if debug == 1: print "U+" + cp + " is Punctuation and has status " + status[cp];
     #elif isHasCompat(cp) == 1:
     #    status[cp] = "FREE_PVAL"
     #    print "U+" + cp + " is HasCompat";
     else:
         status[cp] = "DISALLOWED"
-        print "U+" + cp + " is DISALLOWED by default";
+        if debug == 1: print "U+" + cp + " is DISALLOWED by default";
 #
 ### END CODE ###
 #
@@ -798,7 +853,8 @@ for k in udict.iteritems():
 
 5. Acknowledgements
 
-Thanks to Lance Stout for his help with Python issues.
+Many thanks to Lance Stout for his suggestions regarding Python syntax
+and style.
 
 '''
 
