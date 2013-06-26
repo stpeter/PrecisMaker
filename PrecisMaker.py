@@ -504,7 +504,7 @@ that registry have a lookup result of "False" and thus are CONTEXTO).
 # code to determine if a codepoint is in the JoinControl category
 #
 def isJoinControl(cp):
-    if cp == "200C" or cp == "200D":
+    if cp in ('200', '200D'):
         return 1
 #
 ### END CODE ###
@@ -685,7 +685,7 @@ above.
 #
 def isSpaces(cp):
     item = udict[cp]
-    if item[2] == "Zs":
+    if item[2] in ('Zs'):
         return 1
 #
 ### END CODE ###
@@ -708,7 +708,7 @@ structure that we created above.
 #
 def isSymbols(cp):
     item = udict[cp]
-    if item[2] == "Sm" or "Sc" or "Sk" or "So":
+    if item[2] in ('Sm', 'Sc', 'Sk', 'So'):
         return 1
 #
 ### END CODE ###
@@ -731,7 +731,7 @@ from the "udict" structure that we created above.
 #
 def isPunctuation(cp):
     item = udict[cp]
-    if item[2] == "Pc" or "Pd" or "Ps" or "Pi" or "Pf" or "Po":
+    if item[2] in ('Pc', 'Pd', 'Ps', 'Pi', 'Pf', 'Po'):
         return 1
 #
 ### END CODE ###
