@@ -5,7 +5,7 @@
 PRECIS Maker
 by Peter Saint-Andre / stpeter@stpeter.im
 
-This is version 0.1, last updated 2013-06-26.
+This is version 0.1, last updated 2013-06-27.
 
 And yes, this is an experiment in literate programming. :-)
 
@@ -233,15 +233,15 @@ pseudocode (where "cp" stands for codepoint):
    Else If .cp. .in. Unassigned Then UNASSIGNED;
    Else If .cp. .in. ASCII7 Then PVALID;
    Else If .cp. .in. JoinControl Then CONTEXTJ;
+   Else If .cp. .in. OldHangulJamo Then DISALLOWED;
    Else If .cp. .in. PrecisIgnorableProperties Then DISALLOWED;
    Else If .cp. .in. Controls Then DISALLOWED;
-   Else If .cp. .in. OldHangulJamo Then DISALLOWED;
+   Else If .cp. .in. HasCompat Then SAFE_DIS or FREE_PVAL;
    Else If .cp. .in. LetterDigits Then PVALID;
    Else If .cp. .in. OtherLetterDigits Then SAFE_DIS or FREE_PVAL;
    Else If .cp. .in. Spaces Then SAFE_DIS or FREE_PVAL;
    Else If .cp. .in. Symbols Then SAFE_DIS or FREE_PVAL;
    Else If .cp. .in. Punctuation Then SAFE_DIS or FREE_PVAL;
-   Else If .cp. .in. HasCompat Then SAFE_DIS or FREE_PVAL;
    Else DISALLOWED;
 
 The following sections describe these categories in a bit more detail,
@@ -553,13 +553,13 @@ for v in dcpdict.itervalues():
            firstvalue = firstvalue.strip();
            therange = firstvalue.split('..');
            if len(therange) == 1:
-              cpint = int(therange[0],16);
-              dicp.append(cpint)
+               cpint = int(therange[0],16);
+               dicp.append(cpint)
            else:
                rangestart = therange[0];
                rangeend = therange[1];
                intbottom = int(rangestart,16);
-               inttop = int(rangeend,16);
+               inttop = int(rangeend,16) + 1;
                thisrange = range(intbottom, inttop, 1);
                for i in thisrange:
                    dicp.append(i)
@@ -571,6 +571,7 @@ def isPrecisIgnorableProperties(cp):
     item = udict[cp]
     itemint = int(item[0],16)
     if itemint in dicp:
+        #print cp + " is ignorable!"
         return 1
 #
 ### END CODE ###
@@ -642,7 +643,7 @@ for v in hstdict.itervalues():
            rangestart = therange[0];
            rangeend = therange[1];
            intbottom = int(rangestart,16);
-           inttop = int(rangeend,16);
+           inttop = int(rangeend,16) + 1;
            thisrange = range(intbottom, inttop, 1);
            for i in thisrange:
                ohj.append(i)
@@ -857,15 +858,15 @@ pseudocode from the PRECIS framework specification.
    Else If .cp. .in. Unassigned Then UNASSIGNED;
    Else If .cp. .in. ASCII7 Then PVALID;
    Else If .cp. .in. JoinControl Then CONTEXTJ;
+   Else If .cp. .in. OldHangulJamo Then DISALLOWED;
    Else If .cp. .in. PrecisIgnorableProperties Then DISALLOWED;
    Else If .cp. .in. Controls Then DISALLOWED;
-   Else If .cp. .in. OldHangulJamo Then DISALLOWED;
+   Else If .cp. .in. HasCompat Then SAFE_DIS or FREE_PVAL;
    Else If .cp. .in. LetterDigits Then PVALID;
    Else If .cp. .in. OtherLetterDigits Then SAFE_DIS or FREE_PVAL;
    Else If .cp. .in. Spaces Then SAFE_DIS or FREE_PVAL;
    Else If .cp. .in. Symbols Then SAFE_DIS or FREE_PVAL;
    Else If .cp. .in. Punctuation Then SAFE_DIS or FREE_PVAL;
-   Else If .cp. .in. HasCompat Then SAFE_DIS or FREE_PVAL;
    Else DISALLOWED;
 
 '''
@@ -916,21 +917,27 @@ for p in urange:
     elif isJoinControl(cp) == 1:
         status[cp] = "CONTEXTJ"
         if debug == 1: print "U+" + cp + " is " + status[cp] + " (JoinControl)";
+    #
+    # NOTE: PrecisMaker provisionally performs OldHangulJamo checking before
+    # PrecisIgnorableProperties checking. This order is different from the 
+    # PRECIS framework specification. I have raised this issue on the
+    # precis@ietf.org discussion list.
+    #
+    elif isOldHangulJamo(cp) == 1:
+        status[cp] = "DISALLOWED"
+        if debug == 1: print "U+" + cp + " is " + status[cp] + " (OldHangulJamo)";
     elif isPrecisIgnorableProperties(cp) == 1:
         status[cp] = "DISALLOWED"
         if debug == 1: print "U+" + cp + " is " + status[cp] + " (PrecisIgnorableProperties)";
     elif isControls(cp) == 1:
         status[cp] = "DISALLOWED"
         if debug == 1: print "U+" + cp + " is " + status[cp] + " (Controls)";
-    elif isOldHangulJamo(cp) == 1:
-        status[cp] = "DISALLOWED"
-        if debug == 1: print "U+" + cp + " is " + status[cp] + " (OldHangulJamo)";
     #
     # NOTE: PrecisMaker provisionally performs HasCompat checking before
     # LetterDigits. This order is different from the PRECIS framework
     # specification, which performs HasCompat checking last. The results
-    # using the specified order seem wrong. I will raise this issue on
-    # the precis@ietf.org discusion list.
+    # using the specified order seem wrong. I have raised this issue on
+    # the precis@ietf.org discussion list.
     #
     elif isHasCompat(cp) == 1:
         status[cp] = "FREE_PVAL"
