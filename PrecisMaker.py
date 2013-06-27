@@ -365,6 +365,7 @@ exceptions = dict([
     ('0667','CONTEXTO'), 
     ('0668','CONTEXTO'), 
     ('0669','CONTEXTO'), 
+    ('06F0','CONTEXTO'), 
     ('06F1','CONTEXTO'), 
     ('06F2','CONTEXTO'), 
     ('06F3','CONTEXTO'), 
