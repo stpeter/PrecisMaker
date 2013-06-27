@@ -5,7 +5,7 @@
 PRECIS Maker
 by Peter Saint-Andre / stpeter@stpeter.im
 
-This is version 0.1, last updated 2013-06-18.
+This is version 0.1, last updated 2013-06-26.
 
 And yes, this is an experiment in literate programming. :-)
 
@@ -822,7 +822,7 @@ o <vertical>
 o <wide>
 
 Thus a crude way to guess if a codepoint is compatibly equivalent to
-another codepoint or sequence of codepoints is to to look for the
+another codepoint (or sequence of codepoints) is to to look for the
 compatibility type in the sixth entry of each line. That's what we do in
 PrecisMaker right now, although the method might be improved in a future
 version after we've carefully checked the output of the current version.
@@ -904,26 +904,26 @@ for p in urange:
     # now that we have the codepoint, check each PRECIS category
     if isExceptions(cp) == 1:
         status[cp] = exceptions[cp]
-        if debug == 1: print "U+" + cp + " is Exceptions and has status " + status[cp];
+        if debug == 1: print "U+" + cp + " is " + status[cp] + " (Exceptions)";
     #elif isBackwardCompatible(cp) == 1:        # no-op for now
     elif isUnassigned(cp) == 1:
         status[cp] = "UNASSIGNED"
-        if debug == 1: print "U+" + cp + " is Unassigned";
+        if debug == 1: print "U+" + cp + " is " + status[cp];
     elif isASCII7(cp) == 1:
         status[cp] = "PVALID"
-        if debug == 1: print "U+" + cp + " is ASCII7 and has status " + status[cp];
+        if debug == 1: print "U+" + cp + " is " + status[cp] + " (ASCII7)";
     elif isJoinControl(cp) == 1:
         status[cp] = "CONTEXTJ"
-        if debug == 1: print "U+" + cp + " is JoinControl and has status " + status[cp];
+        if debug == 1: print "U+" + cp + " is " + status[cp] + " (JoinControl)";
     elif isPrecisIgnorableProperties(cp) == 1:
         status[cp] = "DISALLOWED"
-        if debug == 1: print "U+" + cp + " is PrecisIgnorableProperties and has status " + status[cp];
+        if debug == 1: print "U+" + cp + " is " + status[cp] + " (PrecisIgnorableProperties)";
     elif isControls(cp) == 1:
         status[cp] = "DISALLOWED"
-        if debug == 1: print "U+" + cp + " is Controls and has status " + status[cp];
+        if debug == 1: print "U+" + cp + " is " + status[cp] + " (Controls)";
     elif isOldHangulJamo(cp) == 1:
         status[cp] = "DISALLOWED"
-        if debug == 1: print "U+" + cp + " is OldHangulJamo and has status " + status[cp];
+        if debug == 1: print "U+" + cp + " is " + status[cp] + " (OldHangulJamo)";
     #
     # NOTE: PrecisMaker provisionally performs HasCompat checking before
     # LetterDigits. This order is different from the PRECIS framework
@@ -939,25 +939,25 @@ for p in urange:
         cdata = compat.split('>');
         ctype = cdata[0]
         cpoints = cdata[1]
-        if debug == 1: print "U+" + cp + " has a compatibility equivalence of type " + ctype + "> to the codepoint(s)" + cpoints + " and a status of " + status[cp];
+        if debug == 1: print "U+" + cp + " is " + status[cp] + " (compatibility equivalence of type " + ctype + "> to the codepoint(s)" + cpoints + ")";
     elif isLetterDigits(cp) == 1:
         status[cp] = "PVALID"
-        if debug == 1: print "U+" + cp + " is LetterDigits and has status " + status[cp];
+        if debug == 1: print "U+" + cp + " is " + status[cp] + " (LetterDigits)";
     elif isOtherLetterDigits(cp) == 1:
         status[cp] = "FREE_PVAL"
-        if debug == 1: print "U+" + cp + " is OtherLetterDigits and has status " + status[cp];
+        if debug == 1: print "U+" + cp + " is " + status[cp] + " (OtherLetterDigits)";
     elif isSpaces(cp) == 1:
         status[cp] = "FREE_PVAL"
-        if debug == 1: print "U+" + cp + " is Spaces and has status " + status[cp];
+        if debug == 1: print "U+" + cp + " is " + status[cp] + " (Spaces)";
     elif isSymbols(cp) == 1:
         status[cp] = "FREE_PVAL"
-        if debug == 1: print "U+" + cp + " is Symbols and has status " + status[cp];
+        if debug == 1: print "U+" + cp + " is " + status[cp] + " (Symbols)";
     elif isPunctuation(cp) == 1:
         status[cp] = "FREE_PVAL"
-        if debug == 1: print "U+" + cp + " is Punctuation and has status " + status[cp];
+        if debug == 1: print "U+" + cp + " is " + status[cp] + " (Punctuation)";
     else:
         status[cp] = "DISALLOWED"
-        if debug == 1: print "U+" + cp + " is DISALLOWED by default";
+        if debug == 1: print "U+" + cp + " is " + status[cp] + " by default";
 #
 ### END CODE ###
 #
