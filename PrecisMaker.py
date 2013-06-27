@@ -767,7 +767,7 @@ from the "udict" structure that we created above.
 #
 def isPunctuation(cp):
     item = udict[cp]
-    if item[2] in ('Pc', 'Pd', 'Ps', 'Pi', 'Pf', 'Po'):
+    if item[2] in ('Pc', 'Pd', 'Ps', 'Pe', 'Pi', 'Pf', 'Po'):
         return 1
 #
 ### END CODE ###
