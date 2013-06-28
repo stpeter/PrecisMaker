@@ -269,7 +269,7 @@ udict = {};
 with open('UnicodeData.txt') as f:
     for line in f:
         data = line.split(';');
-        udict[data[0]] = data;
+        udict[int(data[0], 16)] = data;
 #
 ### END CODE ###
 #
@@ -336,47 +336,47 @@ are:
 # this dictionary follows the order in RFC 5892
 #
 exceptions = {
-    '00DF': 'PVALID',
-    '03C2': 'PVALID',
-    '06FD': 'PVALID',
-    '06FE': 'PVALID',
-    '0F0B': 'PVALID',
-    '3007': 'PVALID',
-    '00B7': 'CONTEXTO',
-    '0375': 'CONTEXTO',
-    '05F3': 'CONTEXTO',
-    '05F4': 'CONTEXTO',
-    '30FB': 'CONTEXTO',
-    '0660': 'CONTEXTO',
-    '0661': 'CONTEXTO',
-    '0662': 'CONTEXTO',
-    '0663': 'CONTEXTO',
-    '0664': 'CONTEXTO',
-    '0665': 'CONTEXTO',
-    '0666': 'CONTEXTO',
-    '0667': 'CONTEXTO',
-    '0668': 'CONTEXTO',
-    '0669': 'CONTEXTO',
-    '06F0': 'CONTEXTO',
-    '06F1': 'CONTEXTO',
-    '06F2': 'CONTEXTO',
-    '06F3': 'CONTEXTO',
-    '06F4': 'CONTEXTO',
-    '06F5': 'CONTEXTO',
-    '06F6': 'CONTEXTO',
-    '06F7': 'CONTEXTO',
-    '06F8': 'CONTEXTO',
-    '06F9': 'CONTEXTO',
-    '0640': 'DISALLOWED',
-    '07FA': 'DISALLOWED',
-    '302E': 'DISALLOWED',
-    '302F': 'DISALLOWED',
-    '3031': 'DISALLOWED',
-    '3032': 'DISALLOWED',
-    '3033': 'DISALLOWED',
-    '3034': 'DISALLOWED',
-    '3035': 'DISALLOWED',
-    '303B': 'DISALLOWED'
+    0x00DF: 'PVALID',
+    0x03C2: 'PVALID',
+    0x06FD: 'PVALID',
+    0x06FE: 'PVALID',
+    0x0F0B: 'PVALID',
+    0x3007: 'PVALID',
+    0x00B7: 'CONTEXTO',
+    0x0375: 'CONTEXTO',
+    0x05F3: 'CONTEXTO',
+    0x05F4: 'CONTEXTO',
+    0x30FB: 'CONTEXTO',
+    0x0660: 'CONTEXTO',
+    0x0661: 'CONTEXTO',
+    0x0662: 'CONTEXTO',
+    0x0663: 'CONTEXTO',
+    0x0664: 'CONTEXTO',
+    0x0665: 'CONTEXTO',
+    0x0666: 'CONTEXTO',
+    0x0667: 'CONTEXTO',
+    0x0668: 'CONTEXTO',
+    0x0669: 'CONTEXTO',
+    0x06F0: 'CONTEXTO',
+    0x06F1: 'CONTEXTO',
+    0x06F2: 'CONTEXTO',
+    0x06F3: 'CONTEXTO',
+    0x06F4: 'CONTEXTO',
+    0x06F5: 'CONTEXTO',
+    0x06F6: 'CONTEXTO',
+    0x06F7: 'CONTEXTO',
+    0x06F8: 'CONTEXTO',
+    0x06F9: 'CONTEXTO',
+    0x0640: 'DISALLOWED',
+    0x07FA: 'DISALLOWED',
+    0x302E: 'DISALLOWED',
+    0x302F: 'DISALLOWED',
+    0x3031: 'DISALLOWED',
+    0x3032: 'DISALLOWED',
+    0x3033: 'DISALLOWED',
+    0x3034: 'DISALLOWED',
+    0x3035: 'DISALLOWED',
+    0x303B: 'DISALLOWED'
 }
 #
 # define a function that determines if a codepoint is in Exceptions
@@ -468,8 +468,7 @@ equivalent of the codepoint number in hexadecimal (base 16) is between
 # code to determine if a codepoint is in the ASCII7 category
 #
 def isASCII7(cp):
-    udec = int(cp,16)
-    return 33 <= udec <= 126
+    return 33 <= cp <= 126
 #
 ### END CODE ###
 #
@@ -504,7 +503,7 @@ that registry have a lookup result of "False" and thus are CONTEXTO).
 # code to determine if a codepoint is in the JoinControl category
 #
 def isJoinControl(cp):
-    return cp in ('200C', '200D')
+    return cp in (0x200C, 0x200D)
 #
 ### END CODE ###
 #
@@ -553,8 +552,7 @@ with open('DerivedCoreProperties.txt') as f:
 # PrecisIgnorableProperties
 #
 def isPrecisIgnorableProperties(cp):
-    itemint = int(cp, 16)
-    if itemint in dicp:
+    if cp in dicp:
         #print cp + " is ignorable!"
         return True
     return False
@@ -629,8 +627,7 @@ with open('HangulSyllableType.txt') as f:
 # define a function to determine if a codepoint is OldHangulJamo
 #
 def isOldHangulJamo(cp):
-    itemint = int(cp, 16)
-    return itemint in ohj
+    return cp in ohj
 #
 ### END CODE ###
 #
@@ -862,23 +859,23 @@ lastcp = 0x10FFFD;
 # series of functions that tell us whether the codepoint is in the
 # relevant PRECIS category
 #
-for p in xrange(firstcp, lastcp):
+for cp in xrange(firstcp, lastcp):
     # convert each integer to a hex string
-    cp = format(p, "04X").upper();
+    cpstr = "U+{:04X}".format(cp);
     # now that we have the codepoint, check each PRECIS category
     if isExceptions(cp):
         status[cp] = exceptions[cp]
-        if debug: print "U+" + cp + " is " + status[cp] + " (Exceptions)";
+        if debug: print cpstr + " is " + status[cp] + " (Exceptions)";
     #elif isBackwardCompatible(cp):        # no-op for now
     elif isUnassigned(cp):
         status[cp] = "UNASSIGNED"
-        if debug: print "U+" + cp + " is " + status[cp];
+        if debug: print cpstr + " is " + status[cp];
     elif isASCII7(cp):
         status[cp] = "PVALID"
-        if debug: print "U+" + cp + " is " + status[cp] + " (ASCII7)";
+        if debug: print cpstr + " is " + status[cp] + " (ASCII7)";
     elif isJoinControl(cp):
         status[cp] = "CONTEXTJ"
-        if debug: print "U+" + cp + " is " + status[cp] + " (JoinControl)";
+        if debug: print cpstr + " is " + status[cp] + " (JoinControl)";
     #
     # NOTE: PrecisMaker provisionally performs OldHangulJamo checking before
     # PrecisIgnorableProperties checking. This order is different from the
@@ -887,13 +884,13 @@ for p in xrange(firstcp, lastcp):
     #
     elif isOldHangulJamo(cp):
         status[cp] = "DISALLOWED"
-        if debug: print "U+" + cp + " is " + status[cp] + " (OldHangulJamo)";
+        if debug: print cpstr + " is " + status[cp] + " (OldHangulJamo)";
     elif isPrecisIgnorableProperties(cp):
         status[cp] = "DISALLOWED"
-        if debug: print "U+" + cp + " is " + status[cp] + " (PrecisIgnorableProperties)";
+        if debug: print cpstr + " is " + status[cp] + " (PrecisIgnorableProperties)";
     elif isControls(cp):
         status[cp] = "DISALLOWED"
-        if debug: print "U+" + cp + " is " + status[cp] + " (Controls)";
+        if debug: print cpstr + " is " + status[cp] + " (Controls)";
     #
     # NOTE: PrecisMaker provisionally performs HasCompat checking before
     # LetterDigits. This order is different from the PRECIS framework
@@ -909,25 +906,25 @@ for p in xrange(firstcp, lastcp):
         cdata = compat.split('>');
         ctype = cdata[0]
         cpoints = cdata[1]
-        if debug: print "U+" + cp + " is " + status[cp] + " (compatibility equivalence of type " + ctype + "> to the codepoint(s)" + cpoints + ")";
+        if debug: print cpstr + " is " + status[cp] + " (compatibility equivalence of type " + ctype + "> to the codepoint(s)" + cpoints + ")";
     elif isLetterDigits(cp):
         status[cp] = "PVALID"
-        if debug: print "U+" + cp + " is " + status[cp] + " (LetterDigits)";
+        if debug: print cpstr + " is " + status[cp] + " (LetterDigits)";
     elif isOtherLetterDigits(cp):
         status[cp] = "FREE_PVAL"
-        if debug: print "U+" + cp + " is " + status[cp] + " (OtherLetterDigits)";
+        if debug: print cpstr + " is " + status[cp] + " (OtherLetterDigits)";
     elif isSpaces(cp):
         status[cp] = "FREE_PVAL"
-        if debug: print "U+" + cp + " is " + status[cp] + " (Spaces)";
+        if debug: print cpstr + " is " + status[cp] + " (Spaces)";
     elif isSymbols(cp):
         status[cp] = "FREE_PVAL"
-        if debug: print "U+" + cp + " is " + status[cp] + " (Symbols)";
+        if debug: print cpstr + " is " + status[cp] + " (Symbols)";
     elif isPunctuation(cp):
         status[cp] = "FREE_PVAL"
-        if debug: print "U+" + cp + " is " + status[cp] + " (Punctuation)";
+        if debug: print cpstr + " is " + status[cp] + " (Punctuation)";
     else:
         status[cp] = "DISALLOWED"
-        if debug: print "U+" + cp + " is " + status[cp] + " by default";
+        if debug: print cpstr + " is " + status[cp] + " by default";
 #
 ### END CODE ###
 #
