@@ -21,9 +21,9 @@ Table of Contents
 
 1.0 Introduction
 
-Internationalization is hard. Heck, even the word itself is hard, which 
+Internationalization is hard. Heck, even the word itself is hard, which
 is why people shorten it to 'i18n' (the letter 'i', followed by 18 more
-letters, followed by the letter 'n'). I even wrote a big presentation 
+letters, followed by the letter 'n'). I even wrote a big presentation
 about it once, entitled Internationalization, A Guide for the Perplexed:
 
 https://stpeter.im/files/i18n-intro.pdf
@@ -51,7 +51,7 @@ metadata about a character changes in a new version of Unicode, the
 application will automatically handle the character in the right way (or
 so we hope!).
 
-This little script doesn't solve all those problems. Instead, it has a 
+This little script doesn't solve all those problems. Instead, it has a
 more modest goal: given input in the form of all the data files from
 a specific version of Unicode, provide output that describes how each
 Unicode codepoint would be handled under PRECIS. Thus PRECIS Maker is
@@ -78,21 +78,21 @@ particular string class.
 
 There are two string classes in PRECIS: the IdentifierClass and the
 FreeformClass. The IdentifierClass is a restricted class that allows
-only letters and digits (although it also 'grandfathers' all of the 
-characters from the ASCII range, even if they are symbols or whatnot). 
+only letters and digits (although it also 'grandfathers' all of the
+characters from the ASCII range, even if they are symbols or whatnot).
 The FreeformClass is more loose, since it disallows only control
 characters and some other so-called ignorable code points.
 
 Since there are only two string classes and the IdentifierClass is a
 strict subset of the FreeformClass, a codepoint is valid for all of
 PRECIS if it is valid for the IdentifierClass and a codepoint is
-disallowed for all of PRECIS if it is disallowed for the FreeformClass. 
-Therefore, we really need to determine whether a codepoint is one of 
-the following: protocol-valid (PVAL), disallowed, unassigned, contextual 
-(which can be either CONTEXTJ or CONTEXTO), or protocol-valid for the 
+disallowed for all of PRECIS if it is disallowed for the FreeformClass.
+Therefore, we really need to determine whether a codepoint is one of
+the following: protocol-valid (PVAL), disallowed, unassigned, contextual
+(which can be either CONTEXTJ or CONTEXTO), or protocol-valid for the
 FreeformClass (FREE_PVAL) and thus disallowed for the IdentifierClass.
 
-In order to achieve those goals, we will need to read information from 
+In order to achieve those goals, we will need to read information from
 various files in the Unicode Character Database ('ucd'), slice and dice
 that information in various ways to determine the properties of each
 codepoint, and output an XML file that matches the format produced by
@@ -133,7 +133,7 @@ To get the latest version, you can download all of the files here:
 http://www.unicode.org/Public/UCD/latest/ucd/
 
 PrecisMaker assumes that you will run the script in a directory that
-contains all of those text files. These are not included as part of 
+contains all of those text files. These are not included as part of
 PrecisMaker since you should be able to run PrecisMaker against any
 (recent) version of the Unicode Character Database.
 
@@ -143,7 +143,7 @@ o UnicodeData.txt
 o DerivedCoreProperties.txt
 o HangulSyllableType.txt
 
-Let's see exactly why we need those files, and what data we'll pull 
+Let's see exactly why we need those files, and what data we'll pull
 from them...
 
 First, the PRECIS framework specification borrows some existing
@@ -153,7 +153,7 @@ categories (we'll delve into more details later on):
 (A) LetterDigits - The character is a lowercase letter, an uppercase
 letter, a modifier letter, an 'other letter', a non-spacing mark, a
 spacing mark, or a decimal number.  Each of these character types is
-flagged for us in the UnicodeData.txt file. 
+flagged for us in the UnicodeData.txt file.
 
 (B) Unstable - Used in IDNA2008 but not in PRECIS.
 
@@ -175,12 +175,12 @@ that IDNA2008 (and PRECIS) can correctly handle characters whose
 property values change between versions of Unicode. First defined in
 IDNA2008. So far this category is empty.
 
-(H) JoinControl - Characters that are not in LetterDigits but that are 
+(H) JoinControl - Characters that are not in LetterDigits but that are
 still required in strings under some circumstances. First defined in
 IDNA2008.
 
 (I) OldHangulJamo - The conjoining Hangul Jamo codepoints (Leading Jamo,
-Vowel Jamo, and Trailing Jamo). The HangulSyllableType.txt file contains 
+Vowel Jamo, and Trailing Jamo). The HangulSyllableType.txt file contains
 the data we need for this category. First defined in IDNA2008.
 
 (J) Unassigned - Codepoints that are not yet assigned in the version of
@@ -205,19 +205,19 @@ symbol, or some other symbol character.
 (P) Punctuation - The code point is some form of punctuation character
 (connector, dash, quote, etc.).
 
-(Q) HasCompat - Codepoints that have compatibility equivalents as 
+(Q) HasCompat - Codepoints that have compatibility equivalents as
 explained in Chapter 2 and Chapter 3 of the Unicode standard. We'll look
 at these in more detail below.
 
 (R) OtherLetterDigits - The codepoint is a letter or digit other
-than the 'traditional' letters and digits grouped under the 
+than the 'traditional' letters and digits grouped under the
 LetterDigits (A) class.  These are titlecase letters, 'letter numbers',
 'other numbers', and enclosing marks.
 
 In case you're wondering how these categories are used, the short story
-is that the PRECIS IdentifierClass allows LetterDigits characters 
+is that the PRECIS IdentifierClass allows LetterDigits characters
 (Category A) and ASCII7 characters (Category K), and disallows
-everything else; by contrast, the FreeformClass disallows only Controls 
+everything else; by contrast, the FreeformClass disallows only Controls
 characters (Category L) and PrecisIgnorableProperties characters
 (Category M) and allows everything else.  However, in addition to
 DISALLOWED and protocol-valid (PVALID), there are several other possible
@@ -266,8 +266,8 @@ http://www.unicode.org/reports/tr44/#UnicodeData.txt
 # each line in the file becomes an entry in the dictionary
 #
 udict = {};
-with open('UnicodeData.txt') as f:  
-    for line in f: 
+with open('UnicodeData.txt') as f:
+    for line in f:
         data = line.split(';');
         udict[data[0]] = data;
 #
@@ -281,8 +281,8 @@ plan to apply.
 
 3.1 Exceptions
 
-As mentioned, both IDNA2008 and PRECIS handle certain codepoints on an 
-exception basis. As specified in RFC 5892, the 41 codepoints in question 
+As mentioned, both IDNA2008 and PRECIS handle certain codepoints on an
+exception basis. As specified in RFC 5892, the 41 codepoints in question
 are:
 
 00B7 # MIDDLE DOT
@@ -407,7 +407,7 @@ range have been used yet). If a codepoint has not yet been assigned, its
 derived property is UNASSIGNED in PRECIS. Do note that a status of
 unassigned applies to a particular version of Unicode, and a codepoint
 that is unassigned in the current version might be assigned in a future
-version. (Of course, that's the case with all codepoints: their status 
+version. (Of course, that's the case with all codepoints: their status
 is always subject to change as Unicode is updated over time.)
 
 The UnicodeData.txt file contains entries for assigned codepoints, but
@@ -422,7 +422,7 @@ complete range of Unicode characters (i.e., from U+0000 to U+10FFFD) and
 check to see what codepoints we know about in that range; if the
 codepoint can't be found in that list, then it is unassigned.
 
-However, this doesn't always work, because UnicodeData.txt contains some 
+However, this doesn't always work, because UnicodeData.txt contains some
 shorthand for ranges. Consider:
 
 3400;<CJK Ideograph Extension A, First>;Lo;0;L;;;;;N;;;;;
@@ -454,7 +454,7 @@ def isUnassigned(cp):
 3.4 ASCII7
 
 For our purposes, an ASCII7 character is a codepoint between U+0021 and
-U+007E inclusive. We don't need to read in any data from the Unicode 
+U+007E inclusive. We don't need to read in any data from the Unicode
 Character Database to determine that such a codepoint is PVALID.
 Probably the easiest way to do this is to see if the integer (base 10)
 equivalent of the codepoint number in hexadecimal (base 16) is between
@@ -520,7 +520,7 @@ file in the Unicode Character Database.
 
 The DerivedCoreProperties.txt file is a bit hard to parse, but for our
 purposes we can do as we did for the UnicodeData.txt file: split each
-line on the semicolon character. 
+line on the semicolon character.
 
 '''
 
@@ -532,8 +532,8 @@ line on the semicolon character.
 # therefore we create a list of such codepoints
 #
 dicp = []
-with open('DerivedCoreProperties.txt') as f:  
-    for line in f: 
+with open('DerivedCoreProperties.txt') as f:
+    for line in f:
         if line == '\n' or line.startswith('#'):
             continue
         data = line.split(';');
@@ -551,7 +551,7 @@ with open('DerivedCoreProperties.txt') as f:
 #
 # define a function to determine if a codepoint is in
 # PrecisIgnorableProperties
-# 
+#
 def isPrecisIgnorableProperties(cp):
     itemint = int(cp, 16)
     if itemint in dicp:
@@ -570,7 +570,7 @@ to search through the resulting data to find what we need.
 3.7 Controls
 
 A Controls character is any codepoint with a Unicode General_Category of
-"Cc". We can figure this out from the "udict" structure that we created 
+"Cc". We can figure this out from the "udict" structure that we created
 above. Specifically, we need to check if the third entry in the udict
 structure is "Cc" for this codepoint.
 
@@ -603,7 +603,7 @@ HangulSyllableType.txt file from the Unicode Character Database.
 ### BEGIN CODE ###
 #
 # code to pull in the HangulSyllableType.txt file
-# we care only about lines that define Hangul Syllable Types of 
+# we care only about lines that define Hangul Syllable Types of
 # Leading_Jamo, Vowel_Jamo, and Trailing_Jamo
 #
 # therefore we create a list of such codepoints
@@ -640,7 +640,7 @@ def isOldHangulJamo(cp):
 3.9 LetterDigits
 
 A LetterDigits character is any codepoint with a Unicode General_Category of
-"Ll", "Lu", "Lm", "Lo", "Mn", "Mc", or "Nd". We can figure this out from the 
+"Ll", "Lu", "Lm", "Lo", "Mn", "Mc", or "Nd". We can figure this out from the
 "udict" structure that we created above.
 
 '''
@@ -661,8 +661,8 @@ def isLetterDigits(cp):
 
 3.10 OtherLetterDigits
 
-An OtherLetterDigits character is any codepoint with a Unicode 
-General_Category of "Lt", "Nl", "No", or "Me". We can figure this out from 
+An OtherLetterDigits character is any codepoint with a Unicode
+General_Category of "Lt", "Nl", "No", or "Me". We can figure this out from
 the "udict" structure that we created above.
 
 '''
@@ -684,7 +684,7 @@ def isOtherLetterDigits(cp):
 3.11 Spaces
 
 A Spaces character is any codepoint with a Unicode General_Category of
-"Zs". We can figure this out from the "udict" structure that we created 
+"Zs". We can figure this out from the "udict" structure that we created
 above.
 
 '''
@@ -706,7 +706,7 @@ def isSpaces(cp):
 3.12 Symbols
 
 A Symbols character is any codepoint with a Unicode General_Category of
-"Sm", "Sc", "Sk", or "So". We can figure this out from the "udict" 
+"Sm", "Sc", "Sk", or "So". We can figure this out from the "udict"
 structure that we created above.
 
 '''
@@ -727,8 +727,8 @@ def isSymbols(cp):
 
 3.13 Punctuation
 
-A Punctuation character is any codepoint with a Unicode General_Category 
-of "Pc", "Pd", "Ps", "Pe", "Pi", "Pf", or "Po". We can figure this out 
+A Punctuation character is any codepoint with a Unicode General_Category
+of "Pc", "Pd", "Ps", "Pe", "Pi", "Pf", or "Po". We can figure this out
 from the "udict" structure that we created above.
 
 '''
@@ -755,7 +755,7 @@ above.
 
 One way to determine if a character has a compatibility equivalent is to
 run the NFKC normalization routine on the character: if the output of
-NFKC (which might be one or more codepoints) is different from the 
+NFKC (which might be one or more codepoints) is different from the
 codepoint we used as input, then the character is in HasCompat.
 
 However, using Unicode Normalization Form KC (NFKC) is dependent on
@@ -769,14 +769,14 @@ in UnicodeData.txt for this codepoint starts out like so:
 
 00BC;VULGAR FRACTION ONE QUARTER;No;0;ON;<fraction> 0031 2044 0034;
 
-The sixth entry in this line tells us that codepoint 00BC is 
+The sixth entry in this line tells us that codepoint 00BC is
 compatibly equivalent to the codepoints 0031 2044 0034, i.e.:
 
 0031;DIGIT ONE
 2044;FRACTION SLASH
 0034;DIGIT FOUR
 
-This entry also tells us the specific type of compatibility equivalence, 
+This entry also tells us the specific type of compatibility equivalence,
 in this case "<fraction>". In addition to the generic "<compat>" type,
 there are several specific types:
 
@@ -859,7 +859,7 @@ firstcp = 0x0000;
 lastcp = 0x10FFFD;
 #
 # here we iterate through all the codepoints and, for each one, call a
-# series of functions that tell us whether the codepoint is in the 
+# series of functions that tell us whether the codepoint is in the
 # relevant PRECIS category
 #
 for p in xrange(firstcp, lastcp):
@@ -881,7 +881,7 @@ for p in xrange(firstcp, lastcp):
         if debug: print "U+" + cp + " is " + status[cp] + " (JoinControl)";
     #
     # NOTE: PrecisMaker provisionally performs OldHangulJamo checking before
-    # PrecisIgnorableProperties checking. This order is different from the 
+    # PrecisIgnorableProperties checking. This order is different from the
     # PRECIS framework specification. I have raised this issue on the
     # precis@ietf.org discussion list.
     #
@@ -943,4 +943,4 @@ and style.
 
 '''
 
-# THE END 
+# THE END
