@@ -267,9 +267,18 @@ http://www.unicode.org/reports/tr44/#UnicodeData.txt
 #
 udict = {};
 with open('UnicodeData.txt') as f:
+    range_start = -1;
     for line in f:
         data = line.split(';');
-        udict[int(data[0], 16)] = data;
+        cp = int(data[0], 16);
+        if range_start >= 0:
+            for i in xrange(range_start, cp):
+                udict[i] = data;
+            range_start = -1;
+        if data[1].endswith(", First>"):
+            range_start = cp;
+            continue;
+        udict[cp] = data;
 #
 ### END CODE ###
 #
@@ -432,8 +441,6 @@ That means "the range of codepoints from 3400 to 4DB5 defines CJK
 Ideograph Extension A, and all of those codepoints have a
 General_Category of Lo, i.e., they are 'other letters'."
 
-Currently, the code in PrecisMaker does not handle this case!
-
 '''
 
 #
@@ -443,7 +450,6 @@ Currently, the code in PrecisMaker does not handle this case!
 # codepoints
 #
 def isUnassigned(cp):
-# FIXME -- see text above!!!
     return not cp in udict
 #
 ### END CODE ###
