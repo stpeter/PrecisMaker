@@ -112,7 +112,7 @@ import sys
 #
 # also set a flag for debugging
 #
-debug = 1;
+debug = True;
 #
 ### END CODE ###
 #
@@ -382,8 +382,7 @@ exceptions = {
 # define a function that determines if a codepoint is in Exceptions
 #
 def isExceptions(cp):
-    if cp in exceptions:
-        return 1
+    return cp in exceptions
 #
 ### END CODE ###
 #
@@ -445,10 +444,7 @@ Currently, the code in PrecisMaker does not handle this case!
 #
 def isUnassigned(cp):
 # FIXME -- see text above!!!
-    if cp in udict:
-        return 0
-    else:
-        return 1
+    return not cp in udict
 #
 ### END CODE ###
 #
@@ -473,8 +469,7 @@ equivalent of the codepoint number in hexadecimal (base 16) is between
 #
 def isASCII7(cp):
     udec = int(cp,16)
-    if 33 <= udec <= 126:
-        return 1
+    return 33 <= udec <= 126
 #
 ### END CODE ###
 #
@@ -509,8 +504,7 @@ that registry have a lookup result of "False" and thus are CONTEXTO).
 # code to determine if a codepoint is in the JoinControl category
 #
 def isJoinControl(cp):
-    if cp in ('200C', '200D'):
-        return 1
+    return cp in ('200C', '200D')
 #
 ### END CODE ###
 #
@@ -562,7 +556,8 @@ def isPrecisIgnorableProperties(cp):
     itemint = int(cp, 16)
     if itemint in dicp:
         #print cp + " is ignorable!"
-        return 1
+        return True
+    return False
 #
 ### END CODE ###
 #
@@ -588,8 +583,7 @@ structure is "Cc" for this codepoint.
 #
 def isControls(cp):
     item = udict[cp]
-    if item[2] in ('Cc',):
-        return 1
+    return item[2] in ('Cc',)
 #
 ### END CODE ###
 #
@@ -636,8 +630,7 @@ with open('HangulSyllableType.txt') as f:
 #
 def isOldHangulJamo(cp):
     itemint = int(cp, 16)
-    if itemint in ohj:
-        return 1
+    return itemint in ohj
 #
 ### END CODE ###
 #
@@ -659,8 +652,7 @@ A LetterDigits character is any codepoint with a Unicode General_Category of
 #
 def isLetterDigits(cp):
     item = udict[cp]
-    if item[2] in ('Ll', 'Lu', 'Lm', 'Lo', 'Mn', 'Mc', 'Nd'):
-        return 1
+    return item[2] in ('Ll', 'Lu', 'Lm', 'Lo', 'Mn', 'Mc', 'Nd')
 #
 ### END CODE ###
 #
@@ -682,8 +674,7 @@ the "udict" structure that we created above.
 #
 def isOtherLetterDigits(cp):
     item = udict[cp]
-    if item[2] in ('Lt', 'Nl', 'No', 'Me'):
-        return 1
+    return item[2] in ('Lt', 'Nl', 'No', 'Me')
 #
 ### END CODE ###
 #
@@ -705,8 +696,7 @@ above.
 #
 def isSpaces(cp):
     item = udict[cp]
-    if item[2] in ('Zs',):
-        return 1
+    return item[2] in ('Zs',)
 #
 ### END CODE ###
 #
@@ -728,8 +718,7 @@ structure that we created above.
 #
 def isSymbols(cp):
     item = udict[cp]
-    if item[2] in ('Sm', 'Sc', 'Sk', 'So'):
-        return 1
+    return item[2] in ('Sm', 'Sc', 'Sk', 'So')
 #
 ### END CODE ###
 #
@@ -751,8 +740,7 @@ from the "udict" structure that we created above.
 #
 def isPunctuation(cp):
     item = udict[cp]
-    if item[2] in ('Pc', 'Pd', 'Ps', 'Pe', 'Pi', 'Pf', 'Po'):
-        return 1
+    return item[2] in ('Pc', 'Pd', 'Ps', 'Pe', 'Pi', 'Pf', 'Po')
 #
 ### END CODE ###
 #
@@ -823,8 +811,7 @@ version after we've carefully checked the output of the current version.
 #
 def isHasCompat(cp):
     item = udict[cp]
-    if item[5].startswith('<'):
-        return 1
+    return item[5].startswith('<')
 #
 ### END CODE ###
 #
@@ -879,34 +866,34 @@ for p in xrange(firstcp, lastcp):
     # convert each integer to a hex string
     cp = format(p, "04X").upper();
     # now that we have the codepoint, check each PRECIS category
-    if isExceptions(cp) == 1:
+    if isExceptions(cp):
         status[cp] = exceptions[cp]
-        if debug == 1: print "U+" + cp + " is " + status[cp] + " (Exceptions)";
-    #elif isBackwardCompatible(cp) == 1:        # no-op for now
-    elif isUnassigned(cp) == 1:
+        if debug: print "U+" + cp + " is " + status[cp] + " (Exceptions)";
+    #elif isBackwardCompatible(cp):        # no-op for now
+    elif isUnassigned(cp):
         status[cp] = "UNASSIGNED"
-        if debug == 1: print "U+" + cp + " is " + status[cp];
-    elif isASCII7(cp) == 1:
+        if debug: print "U+" + cp + " is " + status[cp];
+    elif isASCII7(cp):
         status[cp] = "PVALID"
-        if debug == 1: print "U+" + cp + " is " + status[cp] + " (ASCII7)";
-    elif isJoinControl(cp) == 1:
+        if debug: print "U+" + cp + " is " + status[cp] + " (ASCII7)";
+    elif isJoinControl(cp):
         status[cp] = "CONTEXTJ"
-        if debug == 1: print "U+" + cp + " is " + status[cp] + " (JoinControl)";
+        if debug: print "U+" + cp + " is " + status[cp] + " (JoinControl)";
     #
     # NOTE: PrecisMaker provisionally performs OldHangulJamo checking before
     # PrecisIgnorableProperties checking. This order is different from the 
     # PRECIS framework specification. I have raised this issue on the
     # precis@ietf.org discussion list.
     #
-    elif isOldHangulJamo(cp) == 1:
+    elif isOldHangulJamo(cp):
         status[cp] = "DISALLOWED"
-        if debug == 1: print "U+" + cp + " is " + status[cp] + " (OldHangulJamo)";
-    elif isPrecisIgnorableProperties(cp) == 1:
+        if debug: print "U+" + cp + " is " + status[cp] + " (OldHangulJamo)";
+    elif isPrecisIgnorableProperties(cp):
         status[cp] = "DISALLOWED"
-        if debug == 1: print "U+" + cp + " is " + status[cp] + " (PrecisIgnorableProperties)";
-    elif isControls(cp) == 1:
+        if debug: print "U+" + cp + " is " + status[cp] + " (PrecisIgnorableProperties)";
+    elif isControls(cp):
         status[cp] = "DISALLOWED"
-        if debug == 1: print "U+" + cp + " is " + status[cp] + " (Controls)";
+        if debug: print "U+" + cp + " is " + status[cp] + " (Controls)";
     #
     # NOTE: PrecisMaker provisionally performs HasCompat checking before
     # LetterDigits. This order is different from the PRECIS framework
@@ -914,7 +901,7 @@ for p in xrange(firstcp, lastcp):
     # using the specified order seem wrong. I have raised this issue on
     # the precis@ietf.org discussion list.
     #
-    elif isHasCompat(cp) == 1:
+    elif isHasCompat(cp):
         status[cp] = "FREE_PVAL"
         # additional lines for debugging
         item = udict[cp]
@@ -922,25 +909,25 @@ for p in xrange(firstcp, lastcp):
         cdata = compat.split('>');
         ctype = cdata[0]
         cpoints = cdata[1]
-        if debug == 1: print "U+" + cp + " is " + status[cp] + " (compatibility equivalence of type " + ctype + "> to the codepoint(s)" + cpoints + ")";
-    elif isLetterDigits(cp) == 1:
+        if debug: print "U+" + cp + " is " + status[cp] + " (compatibility equivalence of type " + ctype + "> to the codepoint(s)" + cpoints + ")";
+    elif isLetterDigits(cp):
         status[cp] = "PVALID"
-        if debug == 1: print "U+" + cp + " is " + status[cp] + " (LetterDigits)";
-    elif isOtherLetterDigits(cp) == 1:
+        if debug: print "U+" + cp + " is " + status[cp] + " (LetterDigits)";
+    elif isOtherLetterDigits(cp):
         status[cp] = "FREE_PVAL"
-        if debug == 1: print "U+" + cp + " is " + status[cp] + " (OtherLetterDigits)";
-    elif isSpaces(cp) == 1:
+        if debug: print "U+" + cp + " is " + status[cp] + " (OtherLetterDigits)";
+    elif isSpaces(cp):
         status[cp] = "FREE_PVAL"
-        if debug == 1: print "U+" + cp + " is " + status[cp] + " (Spaces)";
-    elif isSymbols(cp) == 1:
+        if debug: print "U+" + cp + " is " + status[cp] + " (Spaces)";
+    elif isSymbols(cp):
         status[cp] = "FREE_PVAL"
-        if debug == 1: print "U+" + cp + " is " + status[cp] + " (Symbols)";
-    elif isPunctuation(cp) == 1:
+        if debug: print "U+" + cp + " is " + status[cp] + " (Symbols)";
+    elif isPunctuation(cp):
         status[cp] = "FREE_PVAL"
-        if debug == 1: print "U+" + cp + " is " + status[cp] + " (Punctuation)";
+        if debug: print "U+" + cp + " is " + status[cp] + " (Punctuation)";
     else:
         status[cp] = "DISALLOWED"
-        if debug == 1: print "U+" + cp + " is " + status[cp] + " by default";
+        if debug: print "U+" + cp + " is " + status[cp] + " by default";
 #
 ### END CODE ###
 #
