@@ -431,6 +431,18 @@ complete range of Unicode characters (i.e., from U+0000 to U+10FFFD) and
 check to see what codepoints we know about in that range; if the
 codepoint can't be found in that list, then it is unassigned.
 
+However, this doesn't always work, because UnicodeData.txt contains some 
+shorthand for ranges. Consider:
+
+3400;<CJK Ideograph Extension A, First>;Lo;0;L;;;;;N;;;;;
+4DB5;<CJK Ideograph Extension A, Last>;Lo;0;L;;;;;N;;;;;
+
+That means "the range of codepoints from 3400 to 4DB5 defines CJK
+Ideograph Extension A, and all of those codepoints have a
+General_Category of Lo, i.e., they are 'other letters'."
+
+Currently, the code in PrecisMaker does not handle this case!
+
 '''
 
 #
@@ -440,6 +452,7 @@ codepoint can't be found in that list, then it is unassigned.
 # codepoints
 #
 def isUnassigned(cp):
+# FIXME -- see text above!!!
     if cp in udict:
         return 0
     else:
@@ -813,11 +826,13 @@ o <circle>
 o <final>
 o <font>
 o <fraction>
+o <initial>
 o <isolated>
 o <medial>
 o <noBreak>
 o <narrow>
 o <small>
+o <square>
 o <super>
 o <sub>
 o <vertical>
