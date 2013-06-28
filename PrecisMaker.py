@@ -504,7 +504,7 @@ that registry have a lookup result of "False" and thus are CONTEXTO).
 # code to determine if a codepoint is in the JoinControl category
 #
 def isJoinControl(cp):
-    if cp in ('200', '200D'):
+    if cp in ('200C', '200D'):
         return 1
 #
 ### END CODE ###
