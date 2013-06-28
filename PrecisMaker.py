@@ -271,14 +271,6 @@ with open('UnicodeData.txt') as f:
         data = line.split(';');
         udict[data[0]] = data;
 #
-# also create a dictionary of integer equivalents for known codepoints
-#
-idict = {};
-for k in udict.iteritems():
-    thiscp = k[0];
-    cpint = int(thiscp,16);
-    idict[data[0]] = cpint;
-#
 ### END CODE ###
 #
 
@@ -343,49 +335,49 @@ are:
 # create a Python dictionary of the code points in the Exceptions class
 # this dictionary follows the order in RFC 5892
 #
-exceptions = dict([ 
-    ('00DF','PVALID'), 
-    ('03C2','PVALID'), 
-    ('06FD','PVALID'), 
-    ('06FE','PVALID'), 
-    ('0F0B','PVALID'), 
-    ('3007','PVALID'), 
-    ('00B7','CONTEXTO'), 
-    ('0375','CONTEXTO'), 
-    ('05F3','CONTEXTO'), 
-    ('05F4','CONTEXTO'), 
-    ('30FB','CONTEXTO'), 
-    ('0660','CONTEXTO'), 
-    ('0661','CONTEXTO'), 
-    ('0662','CONTEXTO'), 
-    ('0663','CONTEXTO'), 
-    ('0664','CONTEXTO'), 
-    ('0665','CONTEXTO'), 
-    ('0666','CONTEXTO'), 
-    ('0667','CONTEXTO'), 
-    ('0668','CONTEXTO'), 
-    ('0669','CONTEXTO'), 
-    ('06F0','CONTEXTO'), 
-    ('06F1','CONTEXTO'), 
-    ('06F2','CONTEXTO'), 
-    ('06F3','CONTEXTO'), 
-    ('06F4','CONTEXTO'), 
-    ('06F5','CONTEXTO'), 
-    ('06F6','CONTEXTO'), 
-    ('06F7','CONTEXTO'), 
-    ('06F8','CONTEXTO'), 
-    ('06F9','CONTEXTO'), 
-    ('0640','DISALLOWED'), 
-    ('07FA','DISALLOWED'), 
-    ('302E','DISALLOWED'), 
-    ('302F','DISALLOWED'), 
-    ('3031','DISALLOWED'), 
-    ('3032','DISALLOWED'), 
-    ('3033','DISALLOWED'), 
-    ('3034','DISALLOWED'), 
-    ('3035','DISALLOWED'), 
-    ('303B','DISALLOWED')
-])
+exceptions = {
+    '00DF': 'PVALID',
+    '03C2': 'PVALID',
+    '06FD': 'PVALID',
+    '06FE': 'PVALID',
+    '0F0B': 'PVALID',
+    '3007': 'PVALID',
+    '00B7': 'CONTEXTO',
+    '0375': 'CONTEXTO',
+    '05F3': 'CONTEXTO',
+    '05F4': 'CONTEXTO',
+    '30FB': 'CONTEXTO',
+    '0660': 'CONTEXTO',
+    '0661': 'CONTEXTO',
+    '0662': 'CONTEXTO',
+    '0663': 'CONTEXTO',
+    '0664': 'CONTEXTO',
+    '0665': 'CONTEXTO',
+    '0666': 'CONTEXTO',
+    '0667': 'CONTEXTO',
+    '0668': 'CONTEXTO',
+    '0669': 'CONTEXTO',
+    '06F0': 'CONTEXTO',
+    '06F1': 'CONTEXTO',
+    '06F2': 'CONTEXTO',
+    '06F3': 'CONTEXTO',
+    '06F4': 'CONTEXTO',
+    '06F5': 'CONTEXTO',
+    '06F6': 'CONTEXTO',
+    '06F7': 'CONTEXTO',
+    '06F8': 'CONTEXTO',
+    '06F9': 'CONTEXTO',
+    '0640': 'DISALLOWED',
+    '07FA': 'DISALLOWED',
+    '302E': 'DISALLOWED',
+    '302F': 'DISALLOWED',
+    '3031': 'DISALLOWED',
+    '3032': 'DISALLOWED',
+    '3033': 'DISALLOWED',
+    '3034': 'DISALLOWED',
+    '3035': 'DISALLOWED',
+    '303B': 'DISALLOWED'
+}
 #
 # define a function that determines if a codepoint is in Exceptions
 #
@@ -542,47 +534,32 @@ line on the semicolon character.
 ### BEGIN CODE ###
 #
 # code to pull in the DerivedCoreProperties.txt file
-# each line in the file becomes an entry in the dictionary
+# we care only about lines that define Default_Ignorable_Code_Point
+# therefore we create a list of such codepoints
 #
-dcpdict = {};
+dicp = []
 with open('DerivedCoreProperties.txt') as f:  
     for line in f: 
+        if line == '\n' or line.startswith('#'):
+            continue
         data = line.split(';');
-        dcpdict[data[0]] = data;
+        prop = data[1].split('#')[0].strip();
+        if prop != 'Default_Ignorable_Code_Point':
+            continue;
+        cps = data[0].strip().split('..');
+        if len(cps) == 1:
+            dicp.append(int(cps[0], 16));
+        else:
+            start = int(cps[0], 16);
+            end =  int(cps[1], 16) + 1;
+            for i in xrange(start, end):
+                dicp.append(i);
 #
 # define a function to determine if a codepoint is in
 # PrecisIgnorableProperties
-#
-# we care only about lines that define Default_Ignorable_Code_Point
-#
-# therefore we create a list of such codepoints
 # 
-dicp = [];
-for v in dcpdict.itervalues():
-   if len(v) > 1:
-       secondvalue = v[1] + "";
-       if secondvalue.startswith(' Default_Ignorable_Code_Point #'):
-           firstvalue = v[0] + "";
-           firstvalue = firstvalue.strip();
-           therange = firstvalue.split('..');
-           if len(therange) == 1:
-               cpint = int(therange[0],16);
-               dicp.append(cpint)
-           else:
-               rangestart = therange[0];
-               rangeend = therange[1];
-               intbottom = int(rangestart,16);
-               inttop = int(rangeend,16) + 1;
-               thisrange = range(intbottom, inttop, 1);
-               for i in thisrange:
-                   dicp.append(i)
-#
-# define a function to determine if a codepoint is
-# Default_Ignorable_Code_Point
-#
 def isPrecisIgnorableProperties(cp):
-    item = udict[cp]
-    itemint = int(item[0],16)
+    itemint = int(cp, 16)
     if itemint in dicp:
         #print cp + " is ignorable!"
         return 1
@@ -632,40 +609,33 @@ HangulSyllableType.txt file from the Unicode Character Database.
 ### BEGIN CODE ###
 #
 # code to pull in the HangulSyllableType.txt file
-# each line in the file becomes an entry in the dictionary
-#
-hstdict = {};
-with open('HangulSyllableType.txt') as f:  
-    for line in f: 
-        data = line.split(';');
-        hstdict[data[0]] = data;
-# 
 # we care only about lines that define Hangul Syllable Types of 
 # Leading_Jamo, Vowel_Jamo, and Trailing_Jamo
 #
 # therefore we create a list of such codepoints
-# 
+#
 ohj = [];
-for v in hstdict.itervalues():
-   if len(v) > 1:
-       secondvalue = v[1] + "";
-       if secondvalue.startswith(' L #') or secondvalue.startswith(' V #') or secondvalue.startswith(' T #'):
-           firstvalue = v[0] + "";
-           firstvalue = firstvalue.strip();
-           therange = firstvalue.split('..');
-           rangestart = therange[0];
-           rangeend = therange[1];
-           intbottom = int(rangestart,16);
-           inttop = int(rangeend,16) + 1;
-           thisrange = range(intbottom, inttop, 1);
-           for i in thisrange:
-               ohj.append(i)
+with open('HangulSyllableType.txt') as f:
+    for line in f:
+        if line == '\n' or line.startswith('#'):
+            continue
+        data = line.split(';');
+        prop = data[1].split('#')[0].strip();
+        if not prop in ('L', 'V', 'T'):
+	       continue
+        cps = data[0].strip().split('..');
+        if len(cps) == 1:
+            ohj.append(int(cps[0], 16));
+        else:
+            start = int(cps[0], 16);
+            end =  int(cps[1], 16) + 1;
+            for i in xrange(start, end):
+                ohj.append(i);
 #
 # define a function to determine if a codepoint is OldHangulJamo
 #
 def isOldHangulJamo(cp):
-    item = udict[cp]
-    itemint = int(item[0],16)
+    itemint = int(cp, 16)
     if itemint in ohj:
         return 1
 #
@@ -895,29 +865,19 @@ pseudocode from the PRECIS framework specification.
 #
 status = {};
 #
-# create a range of all possible codepoints (even the ones that have not
-# yet been assigned); note that the range is a range of integers, so we
-# will need to convert them back to hex below...
+# We iterate over all possible codepoints (even the ones that have not  yet
+# been assigned)
 #
-firstcp = "0000";
-lastcp = "10FFFD";
-intfirst = int(firstcp,16);
-intlast = int(lastcp,16);
-urange = range(intfirst, intlast, 1);
+firstcp = 0x0000;
+lastcp = 0x10FFFD;
 #
 # here we iterate through all the codepoints and, for each one, call a
 # series of functions that tell us whether the codepoint is in the 
 # relevant PRECIS category
 #
-for p in urange:
-    # convert each integer to hex
-    phex = hex(p);
-    # for Unicode purposes we don't want the leading "0x"
-    phex = phex.replace('0x','');
-    # also, our codepoint numbers need at least 4 digits
-    phex = phex.rjust(4,'0')
-    # just to be safe, make sure all alpha characters are uppercase
-    cp = phex.swapcase();
+for p in xrange(firstcp, lastcp):
+    # convert each integer to a hex string
+    cp = format(p, "04X").upper();
     # now that we have the codepoint, check each PRECIS category
     if isExceptions(cp) == 1:
         status[cp] = exceptions[cp]
