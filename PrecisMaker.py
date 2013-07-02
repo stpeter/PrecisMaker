@@ -21,9 +21,9 @@ Table of Contents
 
 1.0 Introduction
 
-Internationalization is hard. Heck, even the word itself is hard, which 
+Internationalization is hard. Heck, even the word itself is hard, which
 is why people shorten it to 'i18n' (the letter 'i', followed by 18 more
-letters, followed by the letter 'n'). I even wrote a big presentation 
+letters, followed by the letter 'n'). I even wrote a big presentation
 about it once, entitled Internationalization, A Guide for the Perplexed:
 
 https://stpeter.im/files/i18n-intro.pdf
@@ -51,7 +51,7 @@ metadata about a character changes in a new version of Unicode, the
 application will automatically handle the character in the right way (or
 so we hope!).
 
-This little script doesn't solve all those problems. Instead, it has a 
+This little script doesn't solve all those problems. Instead, it has a
 more modest goal: given input in the form of all the data files from
 a specific version of Unicode, provide output that describes how each
 Unicode codepoint would be handled under PRECIS. Thus PRECIS Maker is
@@ -78,21 +78,21 @@ particular string class.
 
 There are two string classes in PRECIS: the IdentifierClass and the
 FreeformClass. The IdentifierClass is a restricted class that allows
-only letters and digits (although it also 'grandfathers' all of the 
-characters from the ASCII range, even if they are symbols or whatnot). 
+only letters and digits (although it also 'grandfathers' all of the
+characters from the ASCII range, even if they are symbols or whatnot).
 The FreeformClass is more loose, since it disallows only control
 characters and some other so-called ignorable code points.
 
 Since there are only two string classes and the IdentifierClass is a
 strict subset of the FreeformClass, a codepoint is valid for all of
 PRECIS if it is valid for the IdentifierClass and a codepoint is
-disallowed for all of PRECIS if it is disallowed for the FreeformClass. 
-Therefore, we really need to determine whether a codepoint is one of 
-the following: protocol-valid (PVAL), disallowed, unassigned, contextual 
-(which can be either CONTEXTJ or CONTEXTO), or protocol-valid for the 
+disallowed for all of PRECIS if it is disallowed for the FreeformClass.
+Therefore, we really need to determine whether a codepoint is one of
+the following: protocol-valid (PVAL), disallowed, unassigned, contextual
+(which can be either CONTEXTJ or CONTEXTO), or protocol-valid for the
 FreeformClass (FREE_PVAL) and thus disallowed for the IdentifierClass.
 
-In order to achieve those goals, we will need to read information from 
+In order to achieve those goals, we will need to read information from
 various files in the Unicode Character Database ('ucd'), slice and dice
 that information in various ways to determine the properties of each
 codepoint, and output an XML file that matches the format produced by
@@ -112,7 +112,7 @@ import sys
 #
 # also set a flag for debugging
 #
-debug = 1;
+debug = True;
 #
 ### END CODE ###
 #
@@ -133,7 +133,7 @@ To get the latest version, you can download all of the files here:
 http://www.unicode.org/Public/UCD/latest/ucd/
 
 PrecisMaker assumes that you will run the script in a directory that
-contains all of those text files. These are not included as part of 
+contains all of those text files. These are not included as part of
 PrecisMaker since you should be able to run PrecisMaker against any
 (recent) version of the Unicode Character Database.
 
@@ -143,7 +143,7 @@ o UnicodeData.txt
 o DerivedCoreProperties.txt
 o HangulSyllableType.txt
 
-Let's see exactly why we need those files, and what data we'll pull 
+Let's see exactly why we need those files, and what data we'll pull
 from them...
 
 First, the PRECIS framework specification borrows some existing
@@ -153,7 +153,7 @@ categories (we'll delve into more details later on):
 (A) LetterDigits - The character is a lowercase letter, an uppercase
 letter, a modifier letter, an 'other letter', a non-spacing mark, a
 spacing mark, or a decimal number.  Each of these character types is
-flagged for us in the UnicodeData.txt file. 
+flagged for us in the UnicodeData.txt file.
 
 (B) Unstable - Used in IDNA2008 but not in PRECIS.
 
@@ -175,12 +175,12 @@ that IDNA2008 (and PRECIS) can correctly handle characters whose
 property values change between versions of Unicode. First defined in
 IDNA2008. So far this category is empty.
 
-(H) JoinControl - Characters that are not in LetterDigits but that are 
+(H) JoinControl - Characters that are not in LetterDigits but that are
 still required in strings under some circumstances. First defined in
 IDNA2008.
 
 (I) OldHangulJamo - The conjoining Hangul Jamo codepoints (Leading Jamo,
-Vowel Jamo, and Trailing Jamo). The HangulSyllableType.txt file contains 
+Vowel Jamo, and Trailing Jamo). The HangulSyllableType.txt file contains
 the data we need for this category. First defined in IDNA2008.
 
 (J) Unassigned - Codepoints that are not yet assigned in the version of
@@ -205,19 +205,19 @@ symbol, or some other symbol character.
 (P) Punctuation - The code point is some form of punctuation character
 (connector, dash, quote, etc.).
 
-(Q) HasCompat - Codepoints that have compatibility equivalents as 
+(Q) HasCompat - Codepoints that have compatibility equivalents as
 explained in Chapter 2 and Chapter 3 of the Unicode standard. We'll look
 at these in more detail below.
 
 (R) OtherLetterDigits - The codepoint is a letter or digit other
-than the 'traditional' letters and digits grouped under the 
+than the 'traditional' letters and digits grouped under the
 LetterDigits (A) class.  These are titlecase letters, 'letter numbers',
 'other numbers', and enclosing marks.
 
 In case you're wondering how these categories are used, the short story
-is that the PRECIS IdentifierClass allows LetterDigits characters 
+is that the PRECIS IdentifierClass allows LetterDigits characters
 (Category A) and ASCII7 characters (Category K), and disallows
-everything else; by contrast, the FreeformClass disallows only Controls 
+everything else; by contrast, the FreeformClass disallows only Controls
 characters (Category L) and PrecisIgnorableProperties characters
 (Category M) and allows everything else.  However, in addition to
 DISALLOWED and protocol-valid (PVALID), there are several other possible
@@ -266,18 +266,19 @@ http://www.unicode.org/reports/tr44/#UnicodeData.txt
 # each line in the file becomes an entry in the dictionary
 #
 udict = {};
-with open('UnicodeData.txt') as f:  
-    for line in f: 
+with open('UnicodeData.txt') as f:
+    range_start = -1;
+    for line in f:
         data = line.split(';');
-        udict[data[0]] = data;
-#
-# also create a dictionary of integer equivalents for known codepoints
-#
-idict = {};
-for k in udict.iteritems():
-    thiscp = k[0];
-    cpint = int(thiscp,16);
-    idict[data[0]] = cpint;
+        cp = int(data[0], 16);
+        if range_start >= 0:
+            for i in xrange(range_start, cp):
+                udict[i] = data;
+            range_start = -1;
+        if data[1].endswith(", First>"):
+            range_start = cp;
+            continue;
+        udict[cp] = data;
 #
 ### END CODE ###
 #
@@ -289,8 +290,8 @@ plan to apply.
 
 3.1 Exceptions
 
-As mentioned, both IDNA2008 and PRECIS handle certain codepoints on an 
-exception basis. As specified in RFC 5892, the 41 codepoints in question 
+As mentioned, both IDNA2008 and PRECIS handle certain codepoints on an
+exception basis. As specified in RFC 5892, the 41 codepoints in question
 are:
 
 00B7 # MIDDLE DOT
@@ -343,55 +344,54 @@ are:
 # create a Python dictionary of the code points in the Exceptions class
 # this dictionary follows the order in RFC 5892
 #
-exceptions = dict([ 
-    ('00DF','PVALID'), 
-    ('03C2','PVALID'), 
-    ('06FD','PVALID'), 
-    ('06FE','PVALID'), 
-    ('0F0B','PVALID'), 
-    ('3007','PVALID'), 
-    ('00B7','CONTEXTO'), 
-    ('0375','CONTEXTO'), 
-    ('05F3','CONTEXTO'), 
-    ('05F4','CONTEXTO'), 
-    ('30FB','CONTEXTO'), 
-    ('0660','CONTEXTO'), 
-    ('0661','CONTEXTO'), 
-    ('0662','CONTEXTO'), 
-    ('0663','CONTEXTO'), 
-    ('0664','CONTEXTO'), 
-    ('0665','CONTEXTO'), 
-    ('0666','CONTEXTO'), 
-    ('0667','CONTEXTO'), 
-    ('0668','CONTEXTO'), 
-    ('0669','CONTEXTO'), 
-    ('06F0','CONTEXTO'), 
-    ('06F1','CONTEXTO'), 
-    ('06F2','CONTEXTO'), 
-    ('06F3','CONTEXTO'), 
-    ('06F4','CONTEXTO'), 
-    ('06F5','CONTEXTO'), 
-    ('06F6','CONTEXTO'), 
-    ('06F7','CONTEXTO'), 
-    ('06F8','CONTEXTO'), 
-    ('06F9','CONTEXTO'), 
-    ('0640','DISALLOWED'), 
-    ('07FA','DISALLOWED'), 
-    ('302E','DISALLOWED'), 
-    ('302F','DISALLOWED'), 
-    ('3031','DISALLOWED'), 
-    ('3032','DISALLOWED'), 
-    ('3033','DISALLOWED'), 
-    ('3034','DISALLOWED'), 
-    ('3035','DISALLOWED'), 
-    ('303B','DISALLOWED')
-])
+exceptions = {
+    0x00DF: 'PVALID',
+    0x03C2: 'PVALID',
+    0x06FD: 'PVALID',
+    0x06FE: 'PVALID',
+    0x0F0B: 'PVALID',
+    0x3007: 'PVALID',
+    0x00B7: 'CONTEXTO',
+    0x0375: 'CONTEXTO',
+    0x05F3: 'CONTEXTO',
+    0x05F4: 'CONTEXTO',
+    0x30FB: 'CONTEXTO',
+    0x0660: 'CONTEXTO',
+    0x0661: 'CONTEXTO',
+    0x0662: 'CONTEXTO',
+    0x0663: 'CONTEXTO',
+    0x0664: 'CONTEXTO',
+    0x0665: 'CONTEXTO',
+    0x0666: 'CONTEXTO',
+    0x0667: 'CONTEXTO',
+    0x0668: 'CONTEXTO',
+    0x0669: 'CONTEXTO',
+    0x06F0: 'CONTEXTO',
+    0x06F1: 'CONTEXTO',
+    0x06F2: 'CONTEXTO',
+    0x06F3: 'CONTEXTO',
+    0x06F4: 'CONTEXTO',
+    0x06F5: 'CONTEXTO',
+    0x06F6: 'CONTEXTO',
+    0x06F7: 'CONTEXTO',
+    0x06F8: 'CONTEXTO',
+    0x06F9: 'CONTEXTO',
+    0x0640: 'DISALLOWED',
+    0x07FA: 'DISALLOWED',
+    0x302E: 'DISALLOWED',
+    0x302F: 'DISALLOWED',
+    0x3031: 'DISALLOWED',
+    0x3032: 'DISALLOWED',
+    0x3033: 'DISALLOWED',
+    0x3034: 'DISALLOWED',
+    0x3035: 'DISALLOWED',
+    0x303B: 'DISALLOWED'
+}
 #
 # define a function that determines if a codepoint is in Exceptions
 #
 def isExceptions(cp):
-    if cp in exceptions:
-        return 1
+    return cp in exceptions
 #
 ### END CODE ###
 #
@@ -416,7 +416,7 @@ range have been used yet). If a codepoint has not yet been assigned, its
 derived property is UNASSIGNED in PRECIS. Do note that a status of
 unassigned applies to a particular version of Unicode, and a codepoint
 that is unassigned in the current version might be assigned in a future
-version. (Of course, that's the case with all codepoints: their status 
+version. (Of course, that's the case with all codepoints: their status
 is always subject to change as Unicode is updated over time.)
 
 The UnicodeData.txt file contains entries for assigned codepoints, but
@@ -431,7 +431,7 @@ complete range of Unicode characters (i.e., from U+0000 to U+10FFFD) and
 check to see what codepoints we know about in that range; if the
 codepoint can't be found in that list, then it is unassigned.
 
-However, this doesn't always work, because UnicodeData.txt contains some 
+However, this doesn't always work, because UnicodeData.txt contains some
 shorthand for ranges. Consider:
 
 3400;<CJK Ideograph Extension A, First>;Lo;0;L;;;;;N;;;;;
@@ -440,8 +440,6 @@ shorthand for ranges. Consider:
 That means "the range of codepoints from 3400 to 4DB5 defines CJK
 Ideograph Extension A, and all of those codepoints have a
 General_Category of Lo, i.e., they are 'other letters'."
-
-Currently, the code in PrecisMaker does not handle this case!
 
 '''
 
@@ -452,11 +450,7 @@ Currently, the code in PrecisMaker does not handle this case!
 # codepoints
 #
 def isUnassigned(cp):
-# FIXME -- see text above!!!
-    if cp in udict:
-        return 0
-    else:
-        return 1
+    return not cp in udict
 #
 ### END CODE ###
 #
@@ -466,7 +460,7 @@ def isUnassigned(cp):
 3.4 ASCII7
 
 For our purposes, an ASCII7 character is a codepoint between U+0021 and
-U+007E inclusive. We don't need to read in any data from the Unicode 
+U+007E inclusive. We don't need to read in any data from the Unicode
 Character Database to determine that such a codepoint is PVALID.
 Probably the easiest way to do this is to see if the integer (base 10)
 equivalent of the codepoint number in hexadecimal (base 16) is between
@@ -480,9 +474,7 @@ equivalent of the codepoint number in hexadecimal (base 16) is between
 # code to determine if a codepoint is in the ASCII7 category
 #
 def isASCII7(cp):
-    udec = int(cp,16)
-    if 33 <= udec <= 126:
-        return 1
+    return 33 <= cp <= 126
 #
 ### END CODE ###
 #
@@ -517,8 +509,7 @@ that registry have a lookup result of "False" and thus are CONTEXTO).
 # code to determine if a codepoint is in the JoinControl category
 #
 def isJoinControl(cp):
-    if cp in ('200C', '200D'):
-        return 1
+    return cp in (0x200C, 0x200D)
 #
 ### END CODE ###
 #
@@ -534,7 +525,7 @@ file in the Unicode Character Database.
 
 The DerivedCoreProperties.txt file is a bit hard to parse, but for our
 purposes we can do as we did for the UnicodeData.txt file: split each
-line on the semicolon character. 
+line on the semicolon character.
 
 '''
 
@@ -542,50 +533,35 @@ line on the semicolon character.
 ### BEGIN CODE ###
 #
 # code to pull in the DerivedCoreProperties.txt file
-# each line in the file becomes an entry in the dictionary
+# we care only about lines that define Default_Ignorable_Code_Point
+# therefore we create a list of such codepoints
 #
-dcpdict = {};
-with open('DerivedCoreProperties.txt') as f:  
-    for line in f: 
+dicp = []
+with open('DerivedCoreProperties.txt') as f:
+    for line in f:
+        if line == '\n' or line.startswith('#'):
+            continue
         data = line.split(';');
-        dcpdict[data[0]] = data;
+        prop = data[1].split('#')[0].strip();
+        if prop != 'Default_Ignorable_Code_Point':
+            continue;
+        cps = data[0].strip().split('..');
+        if len(cps) == 1:
+            dicp.append(int(cps[0], 16));
+        else:
+            start = int(cps[0], 16);
+            end =  int(cps[1], 16) + 1;
+            for i in xrange(start, end):
+                dicp.append(i);
 #
 # define a function to determine if a codepoint is in
 # PrecisIgnorableProperties
 #
-# we care only about lines that define Default_Ignorable_Code_Point
-#
-# therefore we create a list of such codepoints
-# 
-dicp = [];
-for v in dcpdict.itervalues():
-   if len(v) > 1:
-       secondvalue = v[1] + "";
-       if secondvalue.startswith(' Default_Ignorable_Code_Point #'):
-           firstvalue = v[0] + "";
-           firstvalue = firstvalue.strip();
-           therange = firstvalue.split('..');
-           if len(therange) == 1:
-               cpint = int(therange[0],16);
-               dicp.append(cpint)
-           else:
-               rangestart = therange[0];
-               rangeend = therange[1];
-               intbottom = int(rangestart,16);
-               inttop = int(rangeend,16) + 1;
-               thisrange = range(intbottom, inttop, 1);
-               for i in thisrange:
-                   dicp.append(i)
-#
-# define a function to determine if a codepoint is
-# Default_Ignorable_Code_Point
-#
 def isPrecisIgnorableProperties(cp):
-    item = udict[cp]
-    itemint = int(item[0],16)
-    if itemint in dicp:
+    if cp in dicp:
         #print cp + " is ignorable!"
-        return 1
+        return True
+    return False
 #
 ### END CODE ###
 #
@@ -598,7 +574,7 @@ to search through the resulting data to find what we need.
 3.7 Controls
 
 A Controls character is any codepoint with a Unicode General_Category of
-"Cc". We can figure this out from the "udict" structure that we created 
+"Cc". We can figure this out from the "udict" structure that we created
 above. Specifically, we need to check if the third entry in the udict
 structure is "Cc" for this codepoint.
 
@@ -611,8 +587,7 @@ structure is "Cc" for this codepoint.
 #
 def isControls(cp):
     item = udict[cp]
-    if item[2] in ('Cc',):
-        return 1
+    return item[2] in ('Cc',)
 #
 ### END CODE ###
 #
@@ -632,42 +607,33 @@ HangulSyllableType.txt file from the Unicode Character Database.
 ### BEGIN CODE ###
 #
 # code to pull in the HangulSyllableType.txt file
-# each line in the file becomes an entry in the dictionary
-#
-hstdict = {};
-with open('HangulSyllableType.txt') as f:  
-    for line in f: 
-        data = line.split(';');
-        hstdict[data[0]] = data;
-# 
-# we care only about lines that define Hangul Syllable Types of 
+# we care only about lines that define Hangul Syllable Types of
 # Leading_Jamo, Vowel_Jamo, and Trailing_Jamo
 #
 # therefore we create a list of such codepoints
-# 
+#
 ohj = [];
-for v in hstdict.itervalues():
-   if len(v) > 1:
-       secondvalue = v[1] + "";
-       if secondvalue.startswith(' L #') or secondvalue.startswith(' V #') or secondvalue.startswith(' T #'):
-           firstvalue = v[0] + "";
-           firstvalue = firstvalue.strip();
-           therange = firstvalue.split('..');
-           rangestart = therange[0];
-           rangeend = therange[1];
-           intbottom = int(rangestart,16);
-           inttop = int(rangeend,16) + 1;
-           thisrange = range(intbottom, inttop, 1);
-           for i in thisrange:
-               ohj.append(i)
+with open('HangulSyllableType.txt') as f:
+    for line in f:
+        if line == '\n' or line.startswith('#'):
+            continue
+        data = line.split(';');
+        prop = data[1].split('#')[0].strip();
+        if not prop in ('L', 'V', 'T'):
+	       continue
+        cps = data[0].strip().split('..');
+        if len(cps) == 1:
+            ohj.append(int(cps[0], 16));
+        else:
+            start = int(cps[0], 16);
+            end =  int(cps[1], 16) + 1;
+            for i in xrange(start, end):
+                ohj.append(i);
 #
 # define a function to determine if a codepoint is OldHangulJamo
 #
 def isOldHangulJamo(cp):
-    item = udict[cp]
-    itemint = int(item[0],16)
-    if itemint in ohj:
-        return 1
+    return cp in ohj
 #
 ### END CODE ###
 #
@@ -677,7 +643,7 @@ def isOldHangulJamo(cp):
 3.9 LetterDigits
 
 A LetterDigits character is any codepoint with a Unicode General_Category of
-"Ll", "Lu", "Lm", "Lo", "Mn", "Mc", or "Nd". We can figure this out from the 
+"Ll", "Lu", "Lm", "Lo", "Mn", "Mc", or "Nd". We can figure this out from the
 "udict" structure that we created above.
 
 '''
@@ -689,8 +655,7 @@ A LetterDigits character is any codepoint with a Unicode General_Category of
 #
 def isLetterDigits(cp):
     item = udict[cp]
-    if item[2] in ('Ll', 'Lu', 'Lm', 'Lo', 'Mn', 'Mc', 'Nd'):
-        return 1
+    return item[2] in ('Ll', 'Lu', 'Lm', 'Lo', 'Mn', 'Mc', 'Nd')
 #
 ### END CODE ###
 #
@@ -699,8 +664,8 @@ def isLetterDigits(cp):
 
 3.10 OtherLetterDigits
 
-An OtherLetterDigits character is any codepoint with a Unicode 
-General_Category of "Lt", "Nl", "No", or "Me". We can figure this out from 
+An OtherLetterDigits character is any codepoint with a Unicode
+General_Category of "Lt", "Nl", "No", or "Me". We can figure this out from
 the "udict" structure that we created above.
 
 '''
@@ -712,8 +677,7 @@ the "udict" structure that we created above.
 #
 def isOtherLetterDigits(cp):
     item = udict[cp]
-    if item[2] in ('Lt', 'Nl', 'No', 'Me'):
-        return 1
+    return item[2] in ('Lt', 'Nl', 'No', 'Me')
 #
 ### END CODE ###
 #
@@ -723,7 +687,7 @@ def isOtherLetterDigits(cp):
 3.11 Spaces
 
 A Spaces character is any codepoint with a Unicode General_Category of
-"Zs". We can figure this out from the "udict" structure that we created 
+"Zs". We can figure this out from the "udict" structure that we created
 above.
 
 '''
@@ -735,8 +699,7 @@ above.
 #
 def isSpaces(cp):
     item = udict[cp]
-    if item[2] in ('Zs',):
-        return 1
+    return item[2] in ('Zs',)
 #
 ### END CODE ###
 #
@@ -746,7 +709,7 @@ def isSpaces(cp):
 3.12 Symbols
 
 A Symbols character is any codepoint with a Unicode General_Category of
-"Sm", "Sc", "Sk", or "So". We can figure this out from the "udict" 
+"Sm", "Sc", "Sk", or "So". We can figure this out from the "udict"
 structure that we created above.
 
 '''
@@ -758,8 +721,7 @@ structure that we created above.
 #
 def isSymbols(cp):
     item = udict[cp]
-    if item[2] in ('Sm', 'Sc', 'Sk', 'So'):
-        return 1
+    return item[2] in ('Sm', 'Sc', 'Sk', 'So')
 #
 ### END CODE ###
 #
@@ -768,8 +730,8 @@ def isSymbols(cp):
 
 3.13 Punctuation
 
-A Punctuation character is any codepoint with a Unicode General_Category 
-of "Pc", "Pd", "Ps", "Pe", "Pi", "Pf", or "Po". We can figure this out 
+A Punctuation character is any codepoint with a Unicode General_Category
+of "Pc", "Pd", "Ps", "Pe", "Pi", "Pf", or "Po". We can figure this out
 from the "udict" structure that we created above.
 
 '''
@@ -781,8 +743,7 @@ from the "udict" structure that we created above.
 #
 def isPunctuation(cp):
     item = udict[cp]
-    if item[2] in ('Pc', 'Pd', 'Ps', 'Pe', 'Pi', 'Pf', 'Po'):
-        return 1
+    return item[2] in ('Pc', 'Pd', 'Ps', 'Pe', 'Pi', 'Pf', 'Po')
 #
 ### END CODE ###
 #
@@ -797,7 +758,7 @@ above.
 
 One way to determine if a character has a compatibility equivalent is to
 run the NFKC normalization routine on the character: if the output of
-NFKC (which might be one or more codepoints) is different from the 
+NFKC (which might be one or more codepoints) is different from the
 codepoint we used as input, then the character is in HasCompat.
 
 However, using Unicode Normalization Form KC (NFKC) is dependent on
@@ -811,14 +772,14 @@ in UnicodeData.txt for this codepoint starts out like so:
 
 00BC;VULGAR FRACTION ONE QUARTER;No;0;ON;<fraction> 0031 2044 0034;
 
-The sixth entry in this line tells us that codepoint 00BC is 
+The sixth entry in this line tells us that codepoint 00BC is
 compatibly equivalent to the codepoints 0031 2044 0034, i.e.:
 
 0031;DIGIT ONE
 2044;FRACTION SLASH
 0034;DIGIT FOUR
 
-This entry also tells us the specific type of compatibility equivalence, 
+This entry also tells us the specific type of compatibility equivalence,
 in this case "<fraction>". In addition to the generic "<compat>" type,
 there are several specific types:
 
@@ -853,8 +814,7 @@ version after we've carefully checked the output of the current version.
 #
 def isHasCompat(cp):
     item = udict[cp]
-    if item[5].startswith('<'):
-        return 1
+    return item[5].startswith('<')
 #
 ### END CODE ###
 #
@@ -895,58 +855,48 @@ pseudocode from the PRECIS framework specification.
 #
 status = {};
 #
-# create a range of all possible codepoints (even the ones that have not
-# yet been assigned); note that the range is a range of integers, so we
-# will need to convert them back to hex below...
+# We iterate over all possible codepoints (even the ones that have not  yet
+# been assigned)
 #
-firstcp = "0000";
-lastcp = "10FFFD";
-intfirst = int(firstcp,16);
-intlast = int(lastcp,16);
-urange = range(intfirst, intlast, 1);
+firstcp = 0x0000;
+lastcp = 0x10FFFD;
 #
 # here we iterate through all the codepoints and, for each one, call a
-# series of functions that tell us whether the codepoint is in the 
+# series of functions that tell us whether the codepoint is in the
 # relevant PRECIS category
 #
-for p in urange:
-    # convert each integer to hex
-    phex = hex(p);
-    # for Unicode purposes we don't want the leading "0x"
-    phex = phex.replace('0x','');
-    # also, our codepoint numbers need at least 4 digits
-    phex = phex.rjust(4,'0')
-    # just to be safe, make sure all alpha characters are uppercase
-    cp = phex.swapcase();
+for cp in xrange(firstcp, lastcp):
+    # convert each integer to a hex string
+    cpstr = "U+{:04X}".format(cp);
     # now that we have the codepoint, check each PRECIS category
-    if isExceptions(cp) == 1:
+    if isExceptions(cp):
         status[cp] = exceptions[cp]
-        if debug == 1: print "U+" + cp + " is " + status[cp] + " (Exceptions)";
-    #elif isBackwardCompatible(cp) == 1:        # no-op for now
-    elif isUnassigned(cp) == 1:
+        if debug: print cpstr + " is " + status[cp] + " (Exceptions)";
+    #elif isBackwardCompatible(cp):        # no-op for now
+    elif isUnassigned(cp):
         status[cp] = "UNASSIGNED"
-        if debug == 1: print "U+" + cp + " is " + status[cp];
-    elif isASCII7(cp) == 1:
+        if debug: print cpstr + " is " + status[cp];
+    elif isASCII7(cp):
         status[cp] = "PVALID"
-        if debug == 1: print "U+" + cp + " is " + status[cp] + " (ASCII7)";
-    elif isJoinControl(cp) == 1:
+        if debug: print cpstr + " is " + status[cp] + " (ASCII7)";
+    elif isJoinControl(cp):
         status[cp] = "CONTEXTJ"
-        if debug == 1: print "U+" + cp + " is " + status[cp] + " (JoinControl)";
+        if debug: print cpstr + " is " + status[cp] + " (JoinControl)";
     #
     # NOTE: PrecisMaker provisionally performs OldHangulJamo checking before
-    # PrecisIgnorableProperties checking. This order is different from the 
+    # PrecisIgnorableProperties checking. This order is different from the
     # PRECIS framework specification. I have raised this issue on the
     # precis@ietf.org discussion list.
     #
-    elif isOldHangulJamo(cp) == 1:
+    elif isOldHangulJamo(cp):
         status[cp] = "DISALLOWED"
-        if debug == 1: print "U+" + cp + " is " + status[cp] + " (OldHangulJamo)";
-    elif isPrecisIgnorableProperties(cp) == 1:
+        if debug: print cpstr + " is " + status[cp] + " (OldHangulJamo)";
+    elif isPrecisIgnorableProperties(cp):
         status[cp] = "DISALLOWED"
-        if debug == 1: print "U+" + cp + " is " + status[cp] + " (PrecisIgnorableProperties)";
-    elif isControls(cp) == 1:
+        if debug: print cpstr + " is " + status[cp] + " (PrecisIgnorableProperties)";
+    elif isControls(cp):
         status[cp] = "DISALLOWED"
-        if debug == 1: print "U+" + cp + " is " + status[cp] + " (Controls)";
+        if debug: print cpstr + " is " + status[cp] + " (Controls)";
     #
     # NOTE: PrecisMaker provisionally performs HasCompat checking before
     # LetterDigits. This order is different from the PRECIS framework
@@ -954,7 +904,7 @@ for p in urange:
     # using the specified order seem wrong. I have raised this issue on
     # the precis@ietf.org discussion list.
     #
-    elif isHasCompat(cp) == 1:
+    elif isHasCompat(cp):
         status[cp] = "FREE_PVAL"
         # additional lines for debugging
         item = udict[cp]
@@ -962,25 +912,25 @@ for p in urange:
         cdata = compat.split('>');
         ctype = cdata[0]
         cpoints = cdata[1]
-        if debug == 1: print "U+" + cp + " is " + status[cp] + " (compatibility equivalence of type " + ctype + "> to the codepoint(s)" + cpoints + ")";
-    elif isLetterDigits(cp) == 1:
+        if debug: print cpstr + " is " + status[cp] + " (compatibility equivalence of type " + ctype + "> to the codepoint(s)" + cpoints + ")";
+    elif isLetterDigits(cp):
         status[cp] = "PVALID"
-        if debug == 1: print "U+" + cp + " is " + status[cp] + " (LetterDigits)";
-    elif isOtherLetterDigits(cp) == 1:
+        if debug: print cpstr + " is " + status[cp] + " (LetterDigits)";
+    elif isOtherLetterDigits(cp):
         status[cp] = "FREE_PVAL"
-        if debug == 1: print "U+" + cp + " is " + status[cp] + " (OtherLetterDigits)";
-    elif isSpaces(cp) == 1:
+        if debug: print cpstr + " is " + status[cp] + " (OtherLetterDigits)";
+    elif isSpaces(cp):
         status[cp] = "FREE_PVAL"
-        if debug == 1: print "U+" + cp + " is " + status[cp] + " (Spaces)";
-    elif isSymbols(cp) == 1:
+        if debug: print cpstr + " is " + status[cp] + " (Spaces)";
+    elif isSymbols(cp):
         status[cp] = "FREE_PVAL"
-        if debug == 1: print "U+" + cp + " is " + status[cp] + " (Symbols)";
-    elif isPunctuation(cp) == 1:
+        if debug: print cpstr + " is " + status[cp] + " (Symbols)";
+    elif isPunctuation(cp):
         status[cp] = "FREE_PVAL"
-        if debug == 1: print "U+" + cp + " is " + status[cp] + " (Punctuation)";
+        if debug: print cpstr + " is " + status[cp] + " (Punctuation)";
     else:
         status[cp] = "DISALLOWED"
-        if debug == 1: print "U+" + cp + " is " + status[cp] + " by default";
+        if debug: print cpstr + " is " + status[cp] + " by default";
 #
 ### END CODE ###
 #
@@ -996,4 +946,4 @@ and style.
 
 '''
 
-# THE END 
+# THE END
