@@ -252,10 +252,34 @@ This data provides the basis for most of the decisions we'll make (e.g.,
 whether a codepoint is a letter, a digit, a space, a symbol, a control,
 a punctuation character).
 
-Each line in the UnicodeData.txt file contains a semicolon-separated
-set of data about a codepoint. The format is described here:
+Almost every line in the UnicodeData.txt file contains a 
+semicolon-separated set of data about a codepoint. 
+
+Here is an example, for the letter "P":
+
+0050;LATIN CAPITAL LETTER P;Lu;0;L;;;;;N;;;;0070;
+
+That is, this line provides information about codepoint U+0050, which is
+the uppercase version the letter "P" in the Latin alphabet (among other
+things, we learn here that the Unicode General Category for this
+codepoint is "Lu", short for "Letter, uppercase").
+
+The format is described here:
 
 http://www.unicode.org/reports/tr44/#UnicodeData.txt
+
+Notice that I said "almost every line". There are 24 major exceptions,
+and we need some special handling to pull in this data. They all look
+like this:
+
+3400;<CJK Ideograph Extension A, First>;Lo;0;L;;;;;N;;;;;
+4DB5;<CJK Ideograph Extension A, Last>;Lo;0;L;;;;;N;;;;;
+
+For pairs of lines like these, the initial line defines the start of a
+codepoint range, and the second line defines the end of the range. In
+this example, all of the codepoints between U+3400 and U+4DB5 fall into
+"CJK Ideograph Extension A" and have a General Category of "Lo"
+("Letter, other").
 
 '''
 
