@@ -5,7 +5,7 @@
 PRECIS Maker
 by Peter Saint-Andre / stpeter@stpeter.im
 
-This is version 0.1, last updated 2013-06-27.
+This is version 0.1, last updated 2013-08-28.
 
 And yes, this is an experiment in literate programming. :-)
 
@@ -15,7 +15,9 @@ Table of Contents
 2.0 Method
 3.0 Constructing Our Data
 4.0 Running the Algorithm
-5.0 Acknowledgements
+5.0 Generating XML Output
+6.0 Acknowledgements
+7.0 License
 
 ###
 
@@ -59,8 +61,8 @@ similar to the createtables script that Patrik Faltstrom wrote in Ruby
 for IDNA and stringprep, which has been patched by Yoshiro Yoneya and
 Takahiro Nemoto to handle PRECIS.
 
-PRECIS Maker is written in the Python programming language. Therefore we
-invoke the Python interpreter in the following code.
+PRECIS Maker is written in the Python programming language. That's why
+the first line of this document invokes the Python interpreter.
 
 ###
 
@@ -112,7 +114,7 @@ import sys
 #
 # also set a flag for debugging
 #
-debug = True;
+debug = False;
 #
 ### END CODE ###
 #
@@ -879,7 +881,7 @@ pseudocode from the PRECIS framework specification.
 #
 status = {};
 #
-# We iterate over all possible codepoints (even the ones that have not  yet
+# We iterate over all possible codepoints (even the ones that have not yet
 # been assigned)
 #
 firstcp = 0x0000;
@@ -906,12 +908,6 @@ for cp in xrange(firstcp, lastcp):
     elif isJoinControl(cp):
         status[cp] = "CONTEXTJ"
         if debug: print cpstr + " is " + status[cp] + " (JoinControl)";
-    #
-    # NOTE: PrecisMaker provisionally performs OldHangulJamo checking before
-    # PrecisIgnorableProperties checking. This order is different from the
-    # PRECIS framework specification. I have raised this issue on the
-    # precis@ietf.org discussion list.
-    #
     elif isOldHangulJamo(cp):
         status[cp] = "DISALLOWED"
         if debug: print cpstr + " is " + status[cp] + " (OldHangulJamo)";
@@ -921,13 +917,6 @@ for cp in xrange(firstcp, lastcp):
     elif isControls(cp):
         status[cp] = "DISALLOWED"
         if debug: print cpstr + " is " + status[cp] + " (Controls)";
-    #
-    # NOTE: PrecisMaker provisionally performs HasCompat checking before
-    # LetterDigits. This order is different from the PRECIS framework
-    # specification, which performs HasCompat checking last. The results
-    # using the specified order seem wrong. I have raised this issue on
-    # the precis@ietf.org discussion list.
-    #
     elif isHasCompat(cp):
         status[cp] = "FREE_PVAL"
         # additional lines for debugging
@@ -963,10 +952,73 @@ for cp in xrange(firstcp, lastcp):
 
 ###
 
-5. Acknowledgements
+5. Generating XML Output
 
-Many thanks to Lance Stout for his suggestions regarding Python syntax
-and style.
+The createtables.rb code that Takahiro NEMOTO and Yoshiro YONEYA 
+have patched to support PRECIS outputs an XML format that describes
+the derived property for each codepoint. The format looks like this:
+
+<record>
+  <codepoint>0000</codepoint>
+  <property>DISALLOWED</property>
+  <description></description>
+</record>
+
+
+'''
+
+#
+### BEGIN CODE ###
+#
+# code to generate XML output
+#
+
+# FIXME
+
+#
+### END CODE ###
+#
+
+'''
+
+###
+
+6. Acknowledgements
+
+I would like to thank the following people for their assistance:
+
+- Lance Stout for suggestions regarding Python syntax and style 
+- Florian Zeitz for code patches
+- Takahiro Nemoto for interop testing
+
+###
+
+7. License
+
+This is free and unencumbered software released into the public domain.
+
+Anyone is free to copy, modify, publish, use, compile, sell, or
+distribute this software, either in source code form or as a compiled
+binary, for any purpose, commercial or non-commercial, and by any
+means.
+
+In jurisdictions that recognize copyright laws, the author or authors
+of this software dedicate any and all copyright interest in the
+software to the public domain. We make this dedication for the benefit
+of the public at large and to the detriment of our heirs and
+successors. We intend this dedication to be an overt act of
+relinquishment in perpetuity of all present and future rights to this
+software under copyright law.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+
+For more information, please refer to <http://unlicense.org/>
 
 '''
 
